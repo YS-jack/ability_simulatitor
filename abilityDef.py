@@ -1,11 +1,10 @@
-from typing_extensions import Self
 import random
 from timeConvert import stot
 RELENTLESS = 5
 RELENTLESSGEARLV = 20
 IMPATIENT = 4
 IMPATIENTGEARLV = 20
-FURYOFTHESMALL = 1
+FURYOFTHESMALL = 1 # 0 if inactive, 1 if active
 
 class impatient:
     def __init__(self):
@@ -33,9 +32,9 @@ class relentless:
             else:
                 return 0
 
-class ability:
-    def __init__(self, tc, cd, dur, req, change):
-        self.tc = tc
+class Ability:
+    def __init__(self, name, cd, dur, req, change):
+        self.name = name
         self.cd = stot(cd)
         self.offcd = 0
         self.dur = dur
@@ -48,24 +47,26 @@ class ability:
 #req = adren required to activate
 #change = change in adren. 8 means 8 adren gained, -15 means use 15 adren
 
-class basic(ability):
-    def __init__(self, tc, cd = 10, dur = 1.8, req = 0, change = 8): 
-        super().__init__(tc, cd, dur, req, change)
+class basic(Ability):
+    def __init__(self, name, cd = 10, dur = 1.8, req = 0, change = 8): 
+        super().__init__(name, cd, dur, req, change)
         self.req = 0
         self.im = impatient()
         self.change = self.change + self.im.get_bonous()
         if (FURYOFTHESMALL == 1):
             self.change += 1
 
-class thresh(ability):
-    def __init__(self, tc, cd = 20, dur = 1.8, req = 50, change = -15):
-        super().__init__(tc, cd, dur, req, change)
+class thresh(Ability):
+    def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15):
+        super().__init__(name, cd, dur, req, change)
         self.rel = relentless()
-        if (self.rel.roll(self.tc)):
-            self.change = 0
-class ult(ability):
-    def __init__(self, tc, cd = 60, dur = 1.8, req = 100, change = -100):
-        super().__init__(tc, cd, dur, req, change)
+        
+"""    if (self.rel.roll(self.tc)):
+            self.change = 0"""
+class ult(Ability):
+    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100):
+        super().__init__(name, cd, dur, req, change)
         self.rel = relentless()
-        if (self.rel.roll(self.tc)):
-            self.change = 0
+        
+"""if (self.rel.roll(self.tc)):
+            self.change = 0"""

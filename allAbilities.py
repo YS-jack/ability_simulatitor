@@ -1,24 +1,24 @@
-import abilityDef as ability
+import abilityDef as Ability
 
-class magic:
-    def __init__(self, tc):
-        self.omnipower_igneous = ability.ult(tc, cd=30, req=60, change=-60)
-        self.deep_impact = ability.thresh(tc,cd=15)
-        self.dbreath = ability.basic(tc, cd=10)
-        self.sonic_wave = ability.basic(tc, cd = 5)
-        self.combust = ability.basic(tc, cd=15)
-        self.gchain = ability.basic(tc, cd=10)
-        self.wild_magic = ability.thresh(tc, cd=20)
-        self.magma_tempest = ability.basic(tc, cd=15)
-        self.corruption_blast = ability.basic(tc, cd=15)
-        self.tsunami = ability.ult(tc,cd=60, req=40)
-        self.sunshine = ability.ult(tc)
+class Magic:
+    def __init__(self):
+        self.omnipower_igneous = Ability.ult(name="Omnipower", cd=30, req=60, change=-60)
+        self.deep_impact = Ability.thresh(name="Deep Impact", cd=15)
+        self.dbreath = Ability.basic(name="Dragon Breath", cd=10)
+        self.sonic_wave = Ability.basic(name="Sonic Wave", cd = 5)
+        self.combust = Ability.basic(name="Combust", cd=15)
+        self.gchain = Ability.basic(name="Greater Chain", cd=10)
+        self.wild_magic = Ability.thresh(name="Wild Magic", cd=20)
+        self.magma_tempest = Ability.basic(name="Magma Tempest", cd=15)
+        self.corruption_blast = Ability.basic(name="Corruption Blast", cd=15)
+        self.tsunami = Ability.ult(name="Tsunami", cd=60, req=40)
+        self.sunshine = Ability.ult(name="Sunshine", cd=60)
 
-class defence:
-    def __init__(self, tc):
-        self.devotion = ability.thresh(tc, cd=30)
+class Defence:
+    def __init__(self):
+        self.devotion = Ability.thresh(name="Devotion", cd=30)
 
-class const:
-    def __init__(self, tc):
-        self.tuska = ability.basic(tc, cd=15)
-        self.sacrifice = ability.basic(tc, cd=30)
+class Const:
+    def __init__(self):
+        self.tuska = Ability.basic(name="Tuska's Wrath", cd=15)
+        self.sacrifice = Ability.basic(name="Sacrifice", cd=30)
