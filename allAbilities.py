@@ -2,6 +2,7 @@ import abilityDef as Ability
 
 class Magic:
     def __init__(self):
+        self.asphyx = Ability.thresh(name="Asphyxiate", cd = 20, dur = 7*0.6)
         self.omnipower_igneous = Ability.ult(name="Omnipower", cd=30, req=60, change=-60)
         self.deep_impact = Ability.thresh(name="Deep Impact", cd=15)
         self.dbreath = Ability.basic(name="Dragon Breath", cd=10)
@@ -13,6 +14,8 @@ class Magic:
         self.corruption_blast = Ability.basic(name="Corruption Blast", cd=15)
         self.tsunami = Ability.ult(name="Tsunami", cd=60, req=40)
         self.sunshine = Ability.ult(name="Sunshine", cd=60)
+        self.gconc = Ability.basic(name="Greater Concentrated Blast", cd=5, dur=4*0.6)
+        self.wrack = Ability.basic(name="Wrack", cd = 3)
 
 class Defence:
     def __init__(self):
