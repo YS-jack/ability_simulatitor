@@ -1,11 +1,7 @@
-from allAbilities import Magic, Defence, Const
+from allAbilities import *
 from timeConvert import stot
-
+from playerInfo import *
 SIMULATIONTIME = 60 + 20 # seconds
-INITADREN = 100.0 #starting amount of adrenaline, float
-CONSERVATIONOFENERGY = 0 #0 if not using, 1 if using the relic "conservation of energy"
-RELENTLESSCD = 30 #seconds
-INSPIRATIONAURA = 0 #1 if using inspiration aura, 0 if not
 
 class Bar():
     def __init__(self) -> None:
@@ -39,7 +35,6 @@ class Bar():
                 currentAdren = self.adren[self.tc - 1]
             for ability in self.bar:
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
-                    print("next ability :",ability.name)
                     return ability
             return 0
     def addSimAbility(self, ability):
@@ -73,13 +68,13 @@ class Bar():
     
     def simulate(self):
         while self.tc < self.simt:
-            nextAbility = self.getNextAbility()
-            if (nextAbility == 0):
+            nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc
+            if (nextAbility == 0):#TODO: check if this works
                 self.tc += 1
                 continue
-            self.addSimAbility(nextAbility)
-            self.addDamage(nextAbility)
-            self.renewAdren(nextAbility)
+            self.addSimAbility(nextAbility) #edit simAbility
+            self.addDamage(nextAbility) #calc damage, edit dmgPriamry[{}], edit dmgSecondary[{}]
+            self.renewAdren(nextAbility) #calc adren, edit adren[]
             self.setcd(nextAbility)
             self.tc += nextAbility.dur
 
