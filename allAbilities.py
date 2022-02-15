@@ -1,7 +1,7 @@
 from unicodedata import name
 import abilityDef as Ability
 from playerInfo import DUALWIELD
-#TODO: auto attacks (natural + from non-damaging abilities), dark magic damage, aftershock damage, cannon, poison, biting, blood reaver(soul split)
+#TODO: auto attacks (natural + from non-damaging abilities), dark magic damage, aftershock damage, cannon, poison, biting, blood reaver(soul split), armour spike
 class Magic:
     def __init__(self):#cd = seconds
         self.asphyx = Ability.thresh(name="Asphyxiate", cd=20, dur = 6*0.6, pDmg=[[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]]])
@@ -19,7 +19,7 @@ class Magic:
         self.wrack_and_ruin = Ability.basic(name="Wrack and Ruin", cd=3, pDmg=[[[0,0]],[[60,300]]])
         self.impact = Ability.basic(name="Imapct", cd=15, pDmg=[[[0,0]],[[20,100]]])
         self.metamorph = Ability.ult(name="Metamorphosis")
-        self.tendril = Ability.thresh(name="Smoke Tendrils", cd=45, dur=7*0.6)
+        self.tendril = Ability.thresh(name="Smoke Tendrils", cd=45, dur=7*0.6, pDmg=[[[0,0]],[[20,100]],[[0,0]],[[25,125]],[[0,0]],[[30,150]],[[0,0]],[[40,200]]])
         #first hit delayed
         self.sonic_wave = Ability.basic(name="Sonic Wave", cd = 5,pDmg=[[[0,0]],[[0,0]],[[31.4,157]]])
         self.combust = Ability.basic(name="Combust", cd=15, pDmg=[[[0,0]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]]])
