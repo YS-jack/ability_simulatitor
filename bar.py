@@ -2,7 +2,8 @@ from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
 from calculator import *
-SIMULATIONTIME = 10 # seconds
+from drawGraph import makeGraph
+SIMULATIONTIME = 30 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -117,19 +118,24 @@ class Bar():
             self.tc += nextAbility.dur
             
     def printSimulationResult(self):
-        print("simulation time :\t", ttos(self.simt),"seconds")
-        print("Primary dmg/s =\t",self.dmgPTotal/ttos(self.simt))
-        print("Primary dmg/min =\t",self.dmgPTotal*60/ttos(self.simt))
-        print("Total primary damage\t:",self.dmgPTotal)
+        print("simulation time\t=", ttos(self.simt),"seconds")
         print()
-        print("Secondary dmg/s =\t",self.dmgSTotal/ttos(self.simt))
-        print("Secondary dmg/min =\t",self.dmgSTotal*60/ttos(self.simt))
-        print("Total secondary damage\t:",self.dmgSTotal)
+        print("Primary dmg/s \t\t=",self.dmgPTotal/ttos(self.simt))
+        print("Primary dmg/min \t=",self.dmgPTotal*60/ttos(self.simt))
+        print("Total primary damage\t=",self.dmgPTotal)
+        print()
+        print("Secondary dmg/s \t=",self.dmgSTotal/ttos(self.simt))
+        print("Secondary dmg/min \t=",self.dmgSTotal*60/ttos(self.simt))
+        print("Total secondary damage\t=",self.dmgSTotal)
         print()
         for i in range(self.simt):
             print("tick", i, end=", ")
+            print("Primary damage : ",end="")
             for hitAbility in self.dmgPrimary[i]:
                 print(hitAbility.name, self.dmgPrimary[i][hitAbility], end=", ")
+            print("Secondary damage : ",end="")
+            for hitAbilityS in self.dmgSecondary[i]:
+                print(hitAbilityS.name, self.dmgSecondary[i][hitAbilityS], end=", ")
             if (i > 0):
                 if (self.adren[i] == self.adren[i-1]):
                     print("adren = ..", end=", ")
@@ -141,4 +147,8 @@ class Bar():
                     print("ability used:", self.simAbility[i].name)
             else:
                 print("adren =", self.adren[i], " ,ability used :",self.simAbility[i].name)
-            #print("\t\tdmg on primary:", 100, "\tdmg on secondary:", 100)
+    
+    def showResutGraph(self):
+        makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary)
+        makeGraph.pDetail(self.dmgPrimary)
+        makeGraph.sDetail(self.dmgSecondary)
