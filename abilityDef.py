@@ -30,7 +30,7 @@ class Ability:
         self.change = change
         self.bleed = bleed
         self.pDmg = pDmg
-        self.sdmg = sDmg
+        self.sDmg = sDmg
 
 #tc = tick cont (basicaly the time)
 #cd = how long you have to wait till you can use the ability again
@@ -40,7 +40,7 @@ class Ability:
 #bleed = 0 if not bleed damage, 1 if bleed damage
 
 class basic(Ability):
-    def __init__(self, name, cd = 10, dur = 1.8, req = 0, change = 8, bleed = 0, pDmg = [[20,100]], sDmg = []): 
+    def __init__(self, name, cd = 10, dur = 1.8, req = 0, change = 8, bleed = 0, pDmg = [[[20,100]]], sDmg = [[[0,0]]]): 
         super().__init__(name, cd, dur, req, change, bleed, pDmg, sDmg)
     def getAdren(self, tc, relentlessOffcd):
         if (FURYOFTHESMALL == 1):
@@ -49,7 +49,7 @@ class basic(Ability):
             return self.change + impatientBonous()
 
 class thresh(Ability):
-    def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15, bleed = 0, pDmg = [[20,100]], sDmg = []):
+    def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15, bleed = 0, pDmg = [[[20,100]]], sDmg = [[[0,0]]]):
         super().__init__(name, cd, dur, req, change, bleed, pDmg, sDmg)
     def getAdren(self, tc, relentlessOffcd):
         if (tc >= relentlessOffcd and relentlessProc()):
@@ -58,7 +58,7 @@ class thresh(Ability):
             return self.change
 
 class ult(Ability):
-    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, pDmg = [[20,100]], sDmg = []):
+    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, pDmg = [[[0,0]]], sDmg = [[[0,0]]]):
         super().__init__(name, cd, dur, req, change, bleed, pDmg, sDmg)
     def getAdren(self, tc, relentlessOffcd):
         if (tc >= relentlessOffcd and relentlessProc()):

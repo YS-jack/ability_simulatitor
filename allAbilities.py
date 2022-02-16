@@ -1,9 +1,9 @@
-from unicodedata import name
 import abilityDef as Ability
 from playerInfo import DUALWIELD
 #TODO: auto attacks (natural + from non-damaging abilities), dark magic damage, aftershock damage, cannon, poison, biting, blood reaver(soul split), armour spike
 class Magic:
     def __init__(self):#cd = seconds
+        #damage array meaning  [[[min damage, max damage]]  <- damage splat in a single tick]<-ability's damage each tick
         self.asphyx = Ability.thresh(name="Asphyxiate", cd=20, dur = 6*0.6, pDmg=[[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]]])
         self.deep_impact = Ability.thresh(name="Deep Impact", cd=15, pDmg=[[[0,0]],[[40,200]]])
         self.dbreath = Ability.basic(name="Dragon Breath", cd=10, pDmg=[[[0,0]],[[37,188]]], sDmg=[[[0,0]],[[37,188]]])
@@ -22,12 +22,12 @@ class Magic:
         self.tendril = Ability.thresh(name="Smoke Tendrils", cd=45, dur=7*0.6, pDmg=[[[0,0]],[[20,100]],[[0,0]],[[25,125]],[[0,0]],[[30,150]],[[0,0]],[[40,200]]])
         #first hit delayed
         self.sonic_wave = Ability.basic(name="Sonic Wave", cd = 5,pDmg=[[[0,0]],[[0,0]],[[31.4,157]]])
-        self.combust = Ability.basic(name="Combust", cd=15, pDmg=[[[0,0]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]]])
-        self.corruption_blast = Ability.basic(name="Corruption Blast", cd=15,pDmg=[[[0,0]],[[0,0]],[[33,100]],[[0,0]],[[26.7,80]],[[0,0]],[[20,60]],[[0,0]],[[13.3,40]],[[0,0]],[[6.7, 20]]],
+        self.combust = Ability.basic(name="Combust", cd=15, bleed=1, pDmg=[[[0,0]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]],[[0,0]],[[20,37.6]]])
+        self.corruption_blast = Ability.basic(name="Corruption Blast", cd=15,bleed=1,pDmg=[[[0,0]],[[0,0]],[[33,100]],[[0,0]],[[26.7,80]],[[0,0]],[[20,60]],[[0,0]],[[13.3,40]],[[0,0]],[[6.7, 20]]],
                                                                             sDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[26.7,80]],[[0,0]],[[20,60]],[[0,0]],[[13.3,40]],[[0,0]],[[6.7, 20]]])
         self.omnipower_igneous = Ability.ult(name="Omnipower", cd=30, req=60, change=-60, pDmg=[[[0,0]], [[0,0]], [[0,0]],[[90,180]],[[0,0]],[[90,180],[90,180],[90,180]]])
         
-        if (DUALWIELD):#delayed
+        if (DUALWIELD):#delayed if dual wield
             self.wild_magic = Ability.thresh(name="Wild Magic", cd=20, pDmg=[[[0,0]], [[0,0]], [[50,215]], [[50,215]]])
         else:
             self.wild_magic = Ability.thresh(name="Wild Magic", cd=20, pDmg=[[[0,0]], [[50,215]], [[50,215]]])

@@ -1,24 +1,31 @@
 from allAbilities import *
-from timeConvert import stot
+from timeConvert import stot, ttos
 from playerInfo import *
-SIMULATIONTIME = 60 + 20 # seconds
+from calculator import *
+SIMULATIONTIME = 10 # seconds
 
 class Bar():
     def __init__(self) -> None:
         magic = Magic()
         defence = Defence()
         const = Const()
-        self.bar = [magic.gconc, magic.wild_magic, magic.sunshine, magic.dbreath, 
+        self.bar = [magic.gconc, magic.omnipower_igneous, magic.wild_magic, magic.sunshine, magic.dbreath, 
         magic.corruption_blast, magic.asphyx, magic.combust, 
-        magic.wrack, const.tuska, const.sacrifice, magic.omnipower_igneous]
+        magic.wrack, const.tuska, const.sacrifice, defence.devotion]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
         self.adren = [0]*self.simt
         self.adren[0] = INITADREN
         self.simAbility = []
-        self.dmgPrimary = [{}]*self.simt #[{"ability1":damage, "ability2":damage,...},{},...]
-        self.dmgSecondary = [{}]*self.simt
+        
+        self.dmgPrimary = [] #[{"ability1":damage, "ability2":damage,...},{},...]
+        self.dmgSecondary = []
+        for i in range(self.simt):
+            self.dmgPrimary.append({})
+            self.dmgSecondary.append({})
         self.relentlessOffcd = 0
+        self.dmgPTotal = 0
+        self.dmgSTotal = 0
 
     def printBarInfo(self):
         for b in self.bar:
@@ -42,15 +49,45 @@ class Bar():
                 if (len(self.simAbility) >= self.simt):
                     break
                 self.simAbility.append(ability)
-    def addDamage(self, ability):
-        #write damage to self.dmgPrimary[] and self.dmgSecondary[]
-        #add addtional adren gain from crits and inspiration aura to self.adren[]
-        pass
+    def fillHits(self, ability, pOrS):
+        #fill hitP and hitS caused by "ability" input, including hits >self.tc
+        if (pOrS == "p"):
+            for i in range(len(ability.pDmg)):
+                if (i + self.tc >= self.simt):
+                    break
+                tickHits = ability.pDmg[i]
+                for j in range(len(tickHits)):
+                    min = ability.pDmg[i][j][0]
+                    max = ability.pDmg[i][j][1]
+                    avDmg = Damage.getAvDmg(min, max, ability)
+                    self.dmgPTotal += avDmg
+                    if (avDmg > 0):
+                        if (ability in self.dmgPrimary[i + self.tc]):
+                            self.dmgPrimary[i + self.tc][ability].append(avDmg)
+                        else:
+                            self.dmgPrimary[i + self.tc][ability] = [avDmg]
+                        #check poison proc, call fillHits(posion ability, "p")?
+        elif(pOrS == "s"):
+            for i in range(len(ability.sDmg)):
+                if (i + self.tc >= self.simt):
+                    break
+                tickHits = ability.sDmg[i]
+                for j in range(len(tickHits)):
+                    min = ability.sDmg[i][j][0]
+                    max = ability.sDmg[i][j][1]
+                    avDmg = Damage.getAvDmg(min, max, ability)
+                    self.dmgSTotal += avDmg
+                    if (avDmg > 0):
+                        if (ability in self.dmgSecondary[i + self.tc]):
+                            self.dmgSecondary[i + self.tc][ability].append(avDmg)
+                        else:
+                            self.dmgSecondary[i + self.tc][ability] = [avDmg]
+                        #check poison proc, call fillHits(posion ability, "s")?
+
     def renewAdren(self, ability):
         abilityAdrenGain = ability.getAdren(self.tc, self.relentlessOffcd)
         if (abilityAdrenGain == 0):#set relentless on cooldown
             self.relentlessOffcd = self.tc + stot(RELENTLESSCD)
-        print("adrenaline gain from", ability.name, "=", abilityAdrenGain)
         if (self.tc == 0):
             self.adren[self.tc] += abilityAdrenGain
         else:
@@ -68,28 +105,40 @@ class Bar():
     
     def simulate(self):
         while self.tc < self.simt:
-            nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc
+            nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
             if (nextAbility == 0):#TODO: check if this works
                 self.tc += 1
                 continue
             self.addSimAbility(nextAbility) #edit simAbility
-            self.addDamage(nextAbility) #calc damage, edit dmgPriamry[{}], edit dmgSecondary[{}]
+            self.fillHits(nextAbility, "p") #fill dmgPriamry[{}]
+            self.fillHits(nextAbility, "s") #dmgSecondary[{}]
             self.renewAdren(nextAbility) #calc adren, edit adren[]
             self.setcd(nextAbility)
             self.tc += nextAbility.dur
-
+            
     def printSimulationResult(self):
+        print("simulation time :\t", ttos(self.simt),"seconds")
+        print("Primary dmg/s =\t",self.dmgPTotal/ttos(self.simt))
+        print("Primary dmg/min =\t",self.dmgPTotal*60/ttos(self.simt))
+        print("Total primary damage\t:",self.dmgPTotal)
+        print()
+        print("Secondary dmg/s =\t",self.dmgSTotal/ttos(self.simt))
+        print("Secondary dmg/min =\t",self.dmgSTotal*60/ttos(self.simt))
+        print("Total secondary damage\t:",self.dmgSTotal)
+        print()
         for i in range(self.simt):
             print("tick", i, end=", ")
+            for hitAbility in self.dmgPrimary[i]:
+                print(hitAbility.name, self.dmgPrimary[i][hitAbility], end=", ")
             if (i > 0):
                 if (self.adren[i] == self.adren[i-1]):
                     print("adren = ..", end=", ")
                 else:
                     print("adren =", self.adren[i], end=", ")
                 if (self.simAbility[i] == self.simAbility[i-1]):
-                    print("ability :    ..")
+                    print("ability used:    ..")
                 else:
-                    print("ability :", self.simAbility[i].name)
+                    print("ability used:", self.simAbility[i].name)
             else:
-                print("adren =", self.adren[i], " ,ability :",self.simAbility[i].name)
+                print("adren =", self.adren[i], " ,ability used :",self.simAbility[i].name)
             #print("\t\tdmg on primary:", 100, "\tdmg on secondary:", 100)
