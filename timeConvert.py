@@ -9,6 +9,8 @@ def stot(sec):
         return 5
     if (sec == 5):
         return 9
+    if (sec == 7):
+        return 12
     if (sec == 10):
         return 17
     if (sec == 15):

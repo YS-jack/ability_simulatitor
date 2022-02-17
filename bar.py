@@ -2,19 +2,22 @@ from math import nextafter
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
-from calculator import *
+from calculator import getAvDmg
 from drawGraph import makeGraph
-SIMULATIONTIME = 99.6 # seconds
+SIMULATIONTIME = 3 # seconds
 
 class Bar():
     def __init__(self) -> None:
-        magic = Magic()
-        defence = Defence()
-        const = Const()
+        self.atk = Attack()
+        self.str = Strength()
+        self.magic = Magic()
+        self.range = Range()
+        self.defence = Defence()
+        self.const = Const()
         self.otherAbility = OtherAbility()
-        self.bar = [magic.sunshine, magic.dbreath, magic.magma_tempest, magic.corruption_blast, 
-        magic.gchain, magic.tsunami, magic.sonic_wave, magic.omnipower_igneous, magic.wild_magic,
-        magic.deep_impact, defence.devotion, const.tuska, const.sacrifice, magic.combust]
+        self.bar = [self.magic.gchain, self.magic.sunshine, self.magic.dbreath, self.magic.magma_tempest, self.magic.corruption_blast, 
+        self.magic.gchain, self.magic.tsunami, self.magic.sonic_wave, self.magic.omnipower_igneous, self.magic.wild_magic,
+        self.magic.deep_impact, self.defence.devotion, self.const.tuska, self.const.sacrifice, self.magic.combust]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
         self.adren = [0]*self.simt
@@ -30,6 +33,11 @@ class Bar():
         self.dmgPTotal = 0
         self.dmgSTotal = 0
 
+        self.berserkUlt = NOBERSERK #currently active berserk buff
+        self.berserkOfftc = 0 #tc of until when berserk is active, set in flagBerserk()
+        """self.gchainBuff = NOTACTIVE
+        self.gchainOfftc = 0 #tc of until when gchain effect is active"""
+
     def printBarInfo(self):
         for b in self.bar:
             print(self.bar.index(b), b.name,":")
@@ -37,7 +45,25 @@ class Bar():
             print("\tduration =", b.dur)
             print("\trequired adrenaline =", b.req)
             print("\tadrenaline change =", b.change)
-    
+    def flagBerserk(self, ability):
+        if (ability == self.str.berserk):
+            self.berserkUlt = BERSERK
+            self.berserkOfftc = self.tc + BERSERKDUR
+        elif (ability == self.magic.sunshine):
+            self.berserkUlt = SUNSHINE
+            self.berserkOfftc = self.tc + SUNSHINEDUR
+        elif (ability == self.range.death_swift):
+            self.berserkUlt = DEATHSSWIFTNESS
+            self.berserkOfftc = self.tc + DEATHSWIFTNESSDUR
+    def checkBerserk(self):
+        if (self.berserkOfftc <= self.tc and self.berserkUlt != NOBERSERK):
+            self.berserkUlt = NOBERSERK
+    """def flagGchain(self, ability):
+        if (ability == self.magic.gchain):
+            self.gchainBuff = ACTIVE
+            self.gchainOfftc = self.tc + GCHAINBUFFDUR
+    def checkGchain(self, ability):
+        if (self.gchainOfftc <= self.tc and self.gchainBuff =)"""
     def getNextAbility(self):
             if (self.tc == 0):
                 currentAdren = INITADREN
@@ -46,6 +72,8 @@ class Bar():
             for ability in self.bar:
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
                     print("tick",self.tc,"used",ability.name)
+                    self.flagBerserk(ability)#flag self.berserkUlt if ability is berserk variant
+                    """self.flagGchain(ability) #flag self.gchainBuff if ability is gchain"""
                     return ability
             return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
     def addSimAbility(self, ability):
@@ -56,6 +84,8 @@ class Bar():
                     self.simAbility.append(ability)
     def fillHits(self, ability, pOrS):
         #fill hitP and hitS caused by "ability" input, including hits >self.tc
+        self.checkBerserk()
+        """gchainbuff = self.checkGchain(ability)"""
         if (pOrS == "p"):
             for i in range(len(ability.pDmg)):
                 if (i + self.tc >= self.simt):
@@ -64,7 +94,7 @@ class Bar():
                 for j in range(len(tickHits)):
                     min = ability.pDmg[i][j][0]
                     max = ability.pDmg[i][j][1]
-                    avDmg = Damage.getAvDmg(min, max, ability)
+                    avDmg = getAvDmg(min, max, ability, pOrS, self.berserkUlt)
                     self.dmgPTotal += avDmg
                     if (avDmg > 0):
                         if (ability in self.dmgPrimary[i + self.tc]):
@@ -80,7 +110,7 @@ class Bar():
                 for j in range(len(tickHits)):
                     min = ability.sDmg[i][j][0]
                     max = ability.sDmg[i][j][1]
-                    avDmg = Damage.getAvDmg(min, max, ability)
+                    avDmg = getAvDmg(min, max, ability, pOrS, self.berserkUlt)
                     self.dmgSTotal += avDmg
                     if (avDmg > 0):
                         if (ability in self.dmgSecondary[i + self.tc]):
