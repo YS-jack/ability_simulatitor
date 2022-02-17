@@ -11,7 +11,7 @@ class Magic:
         self.magma_tempest = Ability.basic(name="Magma Tempest", cd=15, #check max hit (cant crit, so might not hit 19%?)
                         pDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]]], 
                         sDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]]])
-        self.tsunami = Ability.ult(name="Tsunami", cd=60, req=40, pDmg=[[[0,0]],[[200,300]]], sDmg=[[[0,0]],[[200,300]]])
+        self.tsunami = Ability.ult(name="Tsunami", cd=60, req=40, change=-40, pDmg=[[[0,0]],[[200,300]]], sDmg=[[[0,0]],[[200,300]]])
         self.sunshine = Ability.ult(name="Sunshine", cd=60)
         #TODO sunishine bleeds
         self.gconc = Ability.basic(name="Greater Concentrated Blast", cd=5, dur=4*0.6, pDmg=[[[0,0]], [[15.8,79]], [[17.8,89]], [[19.8, 99]]])
@@ -40,3 +40,6 @@ class Const:
     def __init__(self):
         self.tuska = Ability.basic(name="Tuska's Wrath", cd=15, pDmg=[[[0,0]],[[30,110]]])
         self.sacrifice = Ability.basic(name="Sacrifice", cd=30, pDmg=[[[0,0]],[[20,100]]])
+class OtherAbility:
+    def __init__(self):
+        self.noAbility = Ability.basic(name="(no ability available)", cd=0.6, dur = 0.6, change=0, pDmg=[[[0,0]]])
