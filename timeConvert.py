@@ -1,6 +1,10 @@
 import math
 
 def stot(sec):
+    if (sec == 0.6):
+        return 1
+    if (sec == 1.8):
+        return 3
     if (sec == 3):
         return 5
     if (sec == 5):
