@@ -1,18 +1,20 @@
+from math import nextafter
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
 from calculator import *
 from drawGraph import makeGraph
-SIMULATIONTIME = 5 # seconds
+SIMULATIONTIME = 99.6 # seconds
 
 class Bar():
     def __init__(self) -> None:
         magic = Magic()
         defence = Defence()
         const = Const()
-        self.bar = [magic.sunshine, magic.dbreath, magic.combust, magic.magma_tempest, magic.corruption_blast, 
+        self.otherAbility = OtherAbility()
+        self.bar = [magic.sunshine, magic.dbreath, magic.magma_tempest, magic.corruption_blast, 
         magic.gchain, magic.tsunami, magic.sonic_wave, magic.omnipower_igneous, magic.wild_magic,
-        magic.deep_impact, defence.devotion, const.tuska, const.sacrifice]
+        magic.deep_impact, defence.devotion, const.tuska, const.sacrifice, magic.combust]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
         self.adren = [0]*self.simt
@@ -43,11 +45,12 @@ class Bar():
                 currentAdren = self.adren[self.tc - 1]
             for ability in self.bar:
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
+                    print("tick",self.tc,"used",ability.name)
                     return ability
-            return 0 #return 0 if no abilities can be used
+            return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
     def addSimAbility(self, ability):
             for i in range(ability.dur):
-                if (len(self.simAbility)> self.simt):
+                if (len(self.simAbility) + 1 > self.simt):
                     break
                 else:
                     self.simAbility.append(ability)
@@ -87,30 +90,30 @@ class Bar():
                         #check poison proc, call fillHits(posion ability, "s")?
 
     def renewAdren(self, ability):
-        abilityAdrenGain = ability.getAdren(self.tc, self.relentlessOffcd)
-        if (abilityAdrenGain == 0):#set relentless on cooldown
-            self.relentlessOffcd = self.tc + stot(RELENTLESSCD)
-        if (self.tc == 0):
-            self.adren[self.tc] += abilityAdrenGain
-        else:
-            self.adren[self.tc] = self.adren[self.tc - 1] + abilityAdrenGain
-        if (self.adren[self.tc] >= 100 + CONSERVATIONOFENERGY * 10):
-            self.adren[self.tc] = 100 + CONSERVATIONOFENERGY * 10
-        for t in range(self.tc + 1, self.tc + ability.dur):
-            if (t < self.simt):
-                self.adren[t] += self.adren[t-1]
-                if (self.adren[t] >= 100 + CONSERVATIONOFENERGY * 10):
-                    self.adren[t] = 100 + CONSERVATIONOFENERGY * 10
-                
+        if (not ability == self.otherAbility.noAbility):#dont add nor subtract adren if ability = noAbility
+            abilityAdrenGain = ability.getAdren(self.tc, self.relentlessOffcd)
+            if (abilityAdrenGain == 0):#set relentless on cooldown
+                self.relentlessOffcd = self.tc + stot(RELENTLESSCD)
+            if (self.tc == 0):
+                self.adren[self.tc] += abilityAdrenGain
+            else:
+                self.adren[self.tc] = self.adren[self.tc - 1] + abilityAdrenGain
+            if (self.adren[self.tc] >= 100 + CONSERVATIONOFENERGY * 10):
+                self.adren[self.tc] = 100 + CONSERVATIONOFENERGY * 10
+            for t in range(self.tc + 1, self.tc + ability.dur):
+                if (t < self.simt):
+                    self.adren[t] += self.adren[t-1]
+                    if (self.adren[t] < 0):
+                        print("adrenaline below 0 after using",self.simAbility[self.tc])
+                    if (self.adren[t] >= 100 + CONSERVATIONOFENERGY * 10):
+                        self.adren[t] = 100 + CONSERVATIONOFENERGY * 10
+            
     def setcd(self, ability):
         ability.offcd = self.tc + ability.cd
     
     def simulate(self):
         while self.tc < self.simt:
             nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
-            if (nextAbility == 0):#0 is returned when no ability is available. TODO: check if this works
-                self.tc += 1
-                continue
             self.addSimAbility(nextAbility) #edit simAbility
             self.fillHits(nextAbility, "p") #fill dmgPriamry[{}]
             self.fillHits(nextAbility, "s") #dmgSecondary[{}]
@@ -119,8 +122,6 @@ class Bar():
             self.tc += nextAbility.dur
             
     def printSimulationResult(self):
-        for abi in self.simAbility:
-            print(abi.name, end=", ")
         print("simulation time\t=", ttos(self.simt),"seconds")
         print()
         print("Primary dmg/s \t\t=",self.dmgPTotal/ttos(self.simt))

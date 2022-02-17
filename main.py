@@ -5,4 +5,4 @@ if __name__ == "__main__":
     #bar.printBarInfo()
     bar.simulate()
     bar.printSimulationResult()
-    bar.showResutGraph()
+    #bar.showResutGraph()
