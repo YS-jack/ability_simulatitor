@@ -3,21 +3,21 @@ from timeConvert import stot, ttos
 from playerInfo import *
 from calculator import *
 from drawGraph import makeGraph
-SIMULATIONTIME = 30 # seconds
+SIMULATIONTIME = 5 # seconds
 
 class Bar():
     def __init__(self) -> None:
         magic = Magic()
         defence = Defence()
         const = Const()
-        self.bar = [magic.gconc, magic.omnipower_igneous, magic.wild_magic, magic.sunshine, magic.dbreath, 
-        magic.corruption_blast, magic.asphyx, magic.combust, 
-        magic.wrack, const.tuska, const.sacrifice, defence.devotion]
+        self.bar = [magic.sunshine, magic.dbreath, magic.combust, magic.magma_tempest, magic.corruption_blast, 
+        magic.gchain, magic.tsunami, magic.sonic_wave, magic.omnipower_igneous, magic.wild_magic,
+        magic.deep_impact, defence.devotion, const.tuska, const.sacrifice]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
         self.adren = [0]*self.simt
         self.adren[0] = INITADREN
-        self.simAbility = []
+        self.simAbility = []*self.simt
         
         self.dmgPrimary = [] #[{"ability1":damage, "ability2":damage,...},{},...]
         self.dmgSecondary = []
@@ -44,12 +44,13 @@ class Bar():
             for ability in self.bar:
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
                     return ability
-            return 0
+            return 0 #return 0 if no abilities can be used
     def addSimAbility(self, ability):
             for i in range(ability.dur):
-                if (len(self.simAbility) >= self.simt):
+                if (len(self.simAbility)> self.simt):
                     break
-                self.simAbility.append(ability)
+                else:
+                    self.simAbility.append(ability)
     def fillHits(self, ability, pOrS):
         #fill hitP and hitS caused by "ability" input, including hits >self.tc
         if (pOrS == "p"):
@@ -107,7 +108,7 @@ class Bar():
     def simulate(self):
         while self.tc < self.simt:
             nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
-            if (nextAbility == 0):#TODO: check if this works
+            if (nextAbility == 0):#0 is returned when no ability is available. TODO: check if this works
                 self.tc += 1
                 continue
             self.addSimAbility(nextAbility) #edit simAbility
@@ -118,6 +119,8 @@ class Bar():
             self.tc += nextAbility.dur
             
     def printSimulationResult(self):
+        for abi in self.simAbility:
+            print(abi.name, end=", ")
         print("simulation time\t=", ttos(self.simt),"seconds")
         print()
         print("Primary dmg/s \t\t=",self.dmgPTotal/ttos(self.simt))
@@ -136,17 +139,15 @@ class Bar():
             print("Secondary damage : ",end="")
             for hitAbilityS in self.dmgSecondary[i]:
                 print(hitAbilityS.name, self.dmgSecondary[i][hitAbilityS], end=", ")
-            if (i > 0):
-                if (self.adren[i] == self.adren[i-1]):
-                    print("adren = ..", end=", ")
-                else:
-                    print("adren =", self.adren[i], end=", ")
-                if (self.simAbility[i] == self.simAbility[i-1]):
-                    print("ability used:    ..")
-                else:
-                    print("ability used:", self.simAbility[i].name)
+            if (self.adren[i] == self.adren[i-1]):
+                print("adren = ..", end=", ")
             else:
-                print("adren =", self.adren[i], " ,ability used :",self.simAbility[i].name)
+                print("adren =", self.adren[i], end=", ")
+            if (self.simAbility[i] == self.simAbility[i-1]):
+                print("ability used:    ..")
+            else:
+                print("ability used:", self.simAbility[i].name)
+            
     
     def showResutGraph(self):
         makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary)
