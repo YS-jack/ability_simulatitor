@@ -84,11 +84,12 @@ PRECISE = 6
 EQUI = 4
 AFTERSHOCK = 4
 PLANTEDFEET = 1
-RUTHELESS = 0
+RUTHELESS = 2
 RUTHELESSSTACK = 5
 LUNGING = 4
 CAROMING = 3
 
+MOBSALYER = 1 #1 if have perk of demon/dragon/undead slayer 
 #aura
 BERSERKAURA = 0
 INSPIRATIONAURA = 0 #1 if using inspiration aura, 0 if not
@@ -101,7 +102,8 @@ HEIGHTENEDSENSES = 0
 #other
 INITADREN = 100.0 #starting amount of adrenaline, float
 CANNON = 10 #0 if not using, 1 if kinetic cyclone, 2 if oldak coil, 3 if dwarf multi cannon, *10 if upgraded
-AVERAGENENEMIES = 4 #average number of enemies you attack at once
+AVERAGENENEMIES = 5.5 #average number of enemies you attack at once
+ENEMYHEALTH = 33563
 HITCHANCE = 1 #hit chance agianst enemies
 
 #some variables

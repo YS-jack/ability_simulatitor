@@ -36,7 +36,7 @@ class Damage():
                 self.abilityDmg = mhBaseDmg + ohBaseDmg
             else:
                 self.abilityDmg = 3.75*self.strlv + MELEE2HDMG*MELEESPEED2H + 1.5*STRENGTHBONOUS
-        print("ability damage of", self.abilityDmg)
+        print("ability damage =", self.abilityDmg)
 
     def getLVBoost(self):
         if (STYLE == STYLEMAGIC):
@@ -77,7 +77,7 @@ class Damage():
     def getPrayerBoost(self):
         return 1 + PRAYERBOOST
     def getOtherBoost(self, berserkUlt):
-        mult = (1 + RIPPERDEMON*0.025) * (1 + RUTHELESS * 0.5 * RUTHELESSSTACK) * OTHERDMGMULTIPLIER
+        mult = (1 + RIPPERDEMON*0.025) * (1 + RUTHELESS*0.005*RUTHELESSSTACK) * (1 + MOBSALYER*0.07) * OTHERDMGMULTIPLIER
         if (not DUALWIELD and INQUISITOR):
             mult *= 1.125
         if (berserkUlt == BERSERK):
@@ -138,5 +138,5 @@ class Damage():
     def caromingDmgMult(self):
         return min(1, (3 + CAROMING)/AVERAGENENEMIES)
     
-    def aoeDmgMult(self, n):
-        return min(1, n/AVERAGENENEMIES)
+    def aoeDmgMult(self, nSecTarget):
+        return min(1, nSecTarget/(AVERAGENENEMIES - 1))

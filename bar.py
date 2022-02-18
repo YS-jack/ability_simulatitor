@@ -5,7 +5,7 @@ from timeConvert import stot, ttos
 from playerInfo import *
 import calculator
 from drawGraph import makeGraph
-SIMULATIONTIME = 10 # seconds
+SIMULATIONTIME = 5 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -16,9 +16,12 @@ class Bar():
         self.defence = Defence()
         self.const = Const()
         self.otherAbility = OtherAbility()
-        self.bar = [self.magic.gchain,self.magic.omnipower_igneous,self.magic.wild_magic,self.magic.sunshine, self.magic.dbreath, self.magic.magma_tempest, self.magic.corruption_blast, 
-         self.magic.tsunami,   self.magic.sonic_wave,
-        self.magic.deep_impact, self.defence.devotion, self.const.tuska, self.const.sacrifice, self.magic.combust]
+        """self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.dbreath,self.magic.tsunami, self.magic.wild_magic, 
+        self.magic.sonic_wave, self.magic.corruption_blast, self.magic.magma_tempest, self.magic.deep_impact, 
+        self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.omnipower_igneous]"""
+        self.bar = [self.magic.dbreath,self.magic.sunshine, self.magic.gchain,self.magic.tsunami,
+        self.magic.wild_magic,self.magic.corruption_blast,self.magic.deep_impact,self.magic.magma_tempest,
+        self.magic.sonic_wave,self.defence.devotion, self.const.tuska, self.magic.combust]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
         self.adren = [0]*self.simt
@@ -85,10 +88,14 @@ class Bar():
                 currentAdren = self.adren[self.tc - 1]
             for ability in self.bar:
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
-                    print("tick",self.tc,"used",ability.name)
                     self.flagBerserk(ability)#flag self.berserkUlt if ability is berserk variant
                     self.flagGchain(ability) #flag self.gchainBuff if ability is gchain
                     return ability
+            print("no ability was available at tick",self.tc,"for bar ",end="")
+            print("[",end="")
+            for ability in self.bar:
+                print(ability.name,end=", ")
+            print("]")
             return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
     def addSimAbility(self, ability):
             for i in range(ability.dur):
@@ -118,6 +125,7 @@ class Bar():
                             self.dmgPrimary[i + self.tc][ability].append(avDmg)
                         else:
                             self.dmgPrimary[i + self.tc][ability] = [avDmg]
+                        #process for gchain damage caluclation on secondary targets
                         if (ability == self.magic.corruption_blast):
                             gchainmult = self.checkGchain(ability)
                         if (gchainmult):#add damage to secondary targets if gchain buff is active
@@ -136,6 +144,7 @@ class Bar():
                     min = ability.sDmg[i][j][0]
                     max = ability.sDmg[i][j][1]
                     avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
+                    avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
                     self.dmgSTotal += avDmg
                     if (avDmg > 0):
                         if (ability in self.dmgSecondary[i + self.tc]):
@@ -181,12 +190,18 @@ class Bar():
         print()
         print("Primary dmg/s \t\t=",self.dmgPTotal/ttos(self.simt))
         print("Primary dmg/min \t=",self.dmgPTotal*60/ttos(self.simt))
+        print("average time to kill primary enemy \t", ENEMYHEALTH/(self.dmgPTotal/ttos(self.simt)))
         print("Total primary damage\t=",self.dmgPTotal)
         print()
         print("Secondary dmg/s \t=",self.dmgSTotal/ttos(self.simt))
         print("Secondary dmg/min \t=",self.dmgSTotal*60/ttos(self.simt))
+        print("average time to kill primary enemy \t", ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt)))
         print("Total secondary damage\t=",self.dmgSTotal)
         print()
+        print("[",end="")
+        for ability in self.bar:
+            print(ability.name,end=", ")
+        print("]")
         for i in range(self.simt):
             print("tick", i, end=", ")
             print("Primary damage : ",end="")

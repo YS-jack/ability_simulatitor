@@ -23,6 +23,7 @@ class Magic:
         self.deep_impact = Ability.thresh(name="Deep Impact", cd=15, pDmg=[[[0,0]],[[40,200]]])
         self.dbreath = Ability.basic(name="Dragon Breath", cd=10, nAOE=4, pDmg=[[[0,0]],[[37,188]]], sDmg=[[[0,0]],[[37,188]]])
         self.gchain = Ability.basic(name="Greater Chain", cd=10, nAOE=2, pDmg=[[[0,0]],[[20,100]]], sDmg=[[[0,0]],[[20,100]]])
+        self.chain = Ability.basic(name="Chain", cd=10, nAOE=2, pDmg=[[[0,0]],[[20,100]]], sDmg=[[[0,0]],[[20,100]]])
         self.magma_tempest = Ability.basic(name="Magma Tempest", nAOE=24, cd=15, #check max hit (cant crit, so might not hit 19%?)
                         pDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]]], 
                         sDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]]])
