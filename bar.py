@@ -1,11 +1,11 @@
-from math import nextafter
+import math
 from pickle import TRUE
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
 import calculator
 from drawGraph import makeGraph
-SIMULATIONTIME = 5 # seconds
+SIMULATIONTIME = 60 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -19,9 +19,9 @@ class Bar():
         """self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.dbreath,self.magic.tsunami, self.magic.wild_magic, 
         self.magic.sonic_wave, self.magic.corruption_blast, self.magic.magma_tempest, self.magic.deep_impact, 
         self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.omnipower_igneous]"""
-        self.bar = [self.magic.dbreath,self.magic.sunshine, self.magic.gchain,self.magic.tsunami,
+        self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.tsunami,self.magic.dbreath,
         self.magic.wild_magic,self.magic.corruption_blast,self.magic.deep_impact,self.magic.magma_tempest,
-        self.magic.sonic_wave,self.defence.devotion, self.const.tuska, self.magic.combust]
+        self.magic.sonic_wave,self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.wrack]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
         self.adren = [0]*self.simt
@@ -171,10 +171,14 @@ class Bar():
                         print("adrenaline below 0 after using",self.simAbility[self.tc])
                     if (self.adren[t] >= 100 + HEIGHTENEDSENSES * 10):
                         self.adren[t] = 100 + HEIGHTENEDSENSES * 10
-            
     def setcd(self, ability):
         ability.offcd = self.tc + ability.cd
-    
+    def roundDownHits(self,dmgPS):
+        for i in range(len(dmgPS)):
+            for index in dmgPS[i]:
+                for j in range(len(dmgPS[i][index])):
+                    dmgPS[i][index][j] = math.floor(dmgPS[i][index][j])
+
     def simulate(self):
         while self.tc < self.simt:
             nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
@@ -184,7 +188,9 @@ class Bar():
             self.renewAdren(nextAbility) #calc adren, edit adren[]
             self.setcd(nextAbility)
             self.tc += nextAbility.dur
-            
+        self.roundDownHits(self.dmgPrimary)
+        self.roundDownHits(self.dmgSecondary)
+
     def printSimulationResult(self):
         print("simulation time\t=", ttos(self.simt),"seconds")
         print()
@@ -195,14 +201,14 @@ class Bar():
         print()
         print("Secondary dmg/s \t=",self.dmgSTotal/ttos(self.simt))
         print("Secondary dmg/min \t=",self.dmgSTotal*60/ttos(self.simt))
-        print("average time to kill primary enemy \t", ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt)))
+        print("average time to kill secondary enemy \t", ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt)))
         print("Total secondary damage\t=",self.dmgSTotal)
         print()
         print("[",end="")
         for ability in self.bar:
             print(ability.name,end=", ")
         print("]")
-        for i in range(self.simt):
+        """for i in range(self.simt):
             print("tick", i, end=", ")
             print("Primary damage : ",end="")
             for hitAbility in self.dmgPrimary[i]:
@@ -217,10 +223,10 @@ class Bar():
             if (self.simAbility[i] == self.simAbility[i-1]):
                 print("ability used:    ..")
             else:
-                print("ability used:", self.simAbility[i].name)
+                print("ability used:", self.simAbility[i].name)"""
             
     
     def showResutGraph(self):
-        makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary)
-        makeGraph.pDetail(self.dmgPrimary)
-        makeGraph.sDetail(self.dmgSecondary)
+        makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary, self.simAbility, self.bar)
+        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar)
+        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar)
