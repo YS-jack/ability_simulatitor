@@ -2,9 +2,9 @@ from math import nextafter
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
-from calculator import getAvDmg
+import calculator
 from drawGraph import makeGraph
-SIMULATIONTIME = 3 # seconds
+SIMULATIONTIME = 5 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -16,7 +16,7 @@ class Bar():
         self.const = Const()
         self.otherAbility = OtherAbility()
         self.bar = [self.magic.gchain, self.magic.sunshine, self.magic.dbreath, self.magic.magma_tempest, self.magic.corruption_blast, 
-        self.magic.gchain, self.magic.tsunami, self.magic.sonic_wave, self.magic.omnipower_igneous, self.magic.wild_magic,
+         self.magic.tsunami, self.magic.sonic_wave, self.magic.omnipower_igneous, self.magic.wild_magic,
         self.magic.deep_impact, self.defence.devotion, self.const.tuska, self.const.sacrifice, self.magic.combust]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
@@ -35,8 +35,13 @@ class Bar():
 
         self.berserkUlt = NOBERSERK #currently active berserk buff
         self.berserkOfftc = 0 #tc of until when berserk is active, set in flagBerserk()
+        self.damageInst = calculator.Damage()
         """self.gchainBuff = NOTACTIVE
         self.gchainOfftc = 0 #tc of until when gchain effect is active"""
+
+        self.damageCap = 12000
+        if (GRIMOIRE):
+            self.damageCap = 15000
 
     def printBarInfo(self):
         for b in self.bar:
@@ -94,7 +99,9 @@ class Bar():
                 for j in range(len(tickHits)):
                     min = ability.pDmg[i][j][0]
                     max = ability.pDmg[i][j][1]
-                    avDmg = getAvDmg(min, max, ability, pOrS, self.berserkUlt)
+                    avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
+                    if (avDmg > self.damageCap):
+                        avDmg = self.damageCap
                     self.dmgPTotal += avDmg
                     if (avDmg > 0):
                         if (ability in self.dmgPrimary[i + self.tc]):
@@ -110,7 +117,7 @@ class Bar():
                 for j in range(len(tickHits)):
                     min = ability.sDmg[i][j][0]
                     max = ability.sDmg[i][j][1]
-                    avDmg = getAvDmg(min, max, ability, pOrS, self.berserkUlt)
+                    avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
                     self.dmgSTotal += avDmg
                     if (avDmg > 0):
                         if (ability in self.dmgSecondary[i + self.tc]):
@@ -128,15 +135,15 @@ class Bar():
                 self.adren[self.tc] += abilityAdrenGain
             else:
                 self.adren[self.tc] = self.adren[self.tc - 1] + abilityAdrenGain
-            if (self.adren[self.tc] >= 100 + CONSERVATIONOFENERGY * 10):
-                self.adren[self.tc] = 100 + CONSERVATIONOFENERGY * 10
+            if (self.adren[self.tc] >= 100 + HEIGHTENEDSENSES * 10):
+                self.adren[self.tc] = 100 + HEIGHTENEDSENSES * 10
             for t in range(self.tc + 1, self.tc + ability.dur):
                 if (t < self.simt):
                     self.adren[t] += self.adren[t-1]
                     if (self.adren[t] < 0):
                         print("adrenaline below 0 after using",self.simAbility[self.tc])
-                    if (self.adren[t] >= 100 + CONSERVATIONOFENERGY * 10):
-                        self.adren[t] = 100 + CONSERVATIONOFENERGY * 10
+                    if (self.adren[t] >= 100 + HEIGHTENEDSENSES * 10):
+                        self.adren[t] = 100 + HEIGHTENEDSENSES * 10
             
     def setcd(self, ability):
         ability.offcd = self.tc + ability.cd

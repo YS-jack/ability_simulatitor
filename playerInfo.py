@@ -1,6 +1,6 @@
 #player stat, armour
-ACCURACY = 4479
-STRENGTHBONOUS = 1000 #for all 3 combat styles
+ACCURACY = 4360
+STRENGTHBONOUS = 199.2 #for all 3 combat styles
 INQUISITOR = 1 #1 if using inquisitor/hexhunter/omen
 DUALWIELD = 0 #0 if 2h weapon, 1 if dual wield
 STYLEMAGIC = 1
@@ -12,9 +12,9 @@ STYLE = STYLEMAGIC #1 = magic, 2 = ranged, 3 = melee
 MAGICMHTIER = 90
 MAGICOHTIER = 90
 MAGIC2HTIER = 80
-MHSPELLDMG = 100
-OHSPELLDMG = 100
-TWOHSPELLDMG = 100
+MHSPELLDMG = 950.4
+OHSPELLDMG = 950.4
+TWOHSPELLDMG = 950.4
 
 #ranged wp, ammo
 RANGEDMHTIER = 90
@@ -39,11 +39,12 @@ DEFENCELV = 99
 SMITHINGLV = 99
 
 #boosts
+OVLNONE = 0
 OVLNM = 1
 OVLSPREME = 2
 OVLELDER = 3
-OVERLOADTYPE = OVLELDER #0 if not using overloads, 1 for normal ovl, 2 for supreme ovl, 3 for elder ovl
-TURMOILPRAYER = 2 #0 if not using damage boosting prayer, 1 if turmoil variant, 2 if praesul variant
+OVERLOADTYPE = 3 #OVLNONE if not using overloads, OVLNM for normal ovl, OVLSPREME for supreme ovl, OVLELDER for elder ovl
+PRAYERBOOST = 0.12 #% of damage boost from prayer. turmoil vairant is 0.1, praesul variant is 0.12
 VIGOUR = 0 #0 if not using, 1 if using ring of vigour
 OTHERDMGMULTIPLIER = 1*1 #multiply all other multiplier. e.g. slave amulet(e) and slayer helmet = 1.2 * 1.145.
 #list of multipliers found here : https://runescape.wiki/w/Ability_damage#Other_boosts
@@ -54,10 +55,10 @@ KWUARMINCPOTENCY = 4 #potency of kwuarm incense sticks
 CINDERBANE = 1 #0 if not using, 1 if using cinderbane gloves
 
 #crit boosts
-REAVERSRING = 1
 KALDEMON = 0 #0 if not using, 1 if using kalgelion demon
 KALDEMONSCROLL = 0 #0 if not using, 1 if using kalg demon scroll
 GRIMOIRE = 0
+REAVERSRING = 1
 STALKERSRING = 0
 CHAMPIONSRING = 0 #3%crit boost to bleeding target, not implemented yet
 
@@ -83,10 +84,10 @@ PRECISE = 6
 EQUI = 4
 AFTERSHOCK = 4
 PLANTEDFEET = 1
-RUTHELESS = 3
+RUTHELESS = 0
 RUTHELESSSTACK = 5
 LUNGING = 4
-CAROMING = 4
+CAROMING = 3
 
 #aura
 BERSERKAURA = 0
