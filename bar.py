@@ -1,10 +1,11 @@
 from math import nextafter
+from pickle import TRUE
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
 import calculator
 from drawGraph import makeGraph
-SIMULATIONTIME = 5 # seconds
+SIMULATIONTIME = 10 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -15,8 +16,8 @@ class Bar():
         self.defence = Defence()
         self.const = Const()
         self.otherAbility = OtherAbility()
-        self.bar = [self.magic.gchain, self.magic.sunshine, self.magic.dbreath, self.magic.magma_tempest, self.magic.corruption_blast, 
-         self.magic.tsunami, self.magic.sonic_wave, self.magic.omnipower_igneous, self.magic.wild_magic,
+        self.bar = [self.magic.gchain,self.magic.omnipower_igneous,self.magic.wild_magic,self.magic.sunshine, self.magic.dbreath, self.magic.magma_tempest, self.magic.corruption_blast, 
+         self.magic.tsunami,   self.magic.sonic_wave,
         self.magic.deep_impact, self.defence.devotion, self.const.tuska, self.const.sacrifice, self.magic.combust]
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
@@ -36,8 +37,8 @@ class Bar():
         self.berserkUlt = NOBERSERK #currently active berserk buff
         self.berserkOfftc = 0 #tc of until when berserk is active, set in flagBerserk()
         self.damageInst = calculator.Damage()
-        """self.gchainBuff = NOTACTIVE
-        self.gchainOfftc = 0 #tc of until when gchain effect is active"""
+        self.gchainBuff = NOTACTIVE
+        self.gchainOfftc = 0 #tc of until when gchain effect is active
 
         self.damageCap = 12000
         if (GRIMOIRE):
@@ -61,14 +62,22 @@ class Bar():
             self.berserkUlt = DEATHSSWIFTNESS
             self.berserkOfftc = self.tc + DEATHSWIFTNESSDUR
     def checkBerserk(self):
-        if (self.berserkOfftc <= self.tc and self.berserkUlt != NOBERSERK):
+        if (self.berserkOfftc <= self.tc and self.berserkUlt != NOBERSERK):#turn of beserk mode if past offtc
             self.berserkUlt = NOBERSERK
-    """def flagGchain(self, ability):
+    def flagGchain(self, ability):
         if (ability == self.magic.gchain):
             self.gchainBuff = ACTIVE
             self.gchainOfftc = self.tc + GCHAINBUFFDUR
     def checkGchain(self, ability):
-        if (self.gchainOfftc <= self.tc and self.gchainBuff =)"""
+        if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability != self.magic.magma_tempest and ability != self.magic.gchain):#if not used yet
+            self.gchainOfftc = 0
+            self.gchainBuff = NOTACTIVE
+            if (ability == self.magic.corruption_blast):
+                return 1 #return multiplier of damage
+            else:
+                return 0.5
+        else:
+            return 0
     def getNextAbility(self):
             if (self.tc == 0):
                 currentAdren = INITADREN
@@ -78,7 +87,7 @@ class Bar():
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
                     print("tick",self.tc,"used",ability.name)
                     self.flagBerserk(ability)#flag self.berserkUlt if ability is berserk variant
-                    """self.flagGchain(ability) #flag self.gchainBuff if ability is gchain"""
+                    self.flagGchain(ability) #flag self.gchainBuff if ability is gchain
                     return ability
             return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
     def addSimAbility(self, ability):
@@ -90,8 +99,9 @@ class Bar():
     def fillHits(self, ability, pOrS):
         #fill hitP and hitS caused by "ability" input, including hits >self.tc
         self.checkBerserk()
-        """gchainbuff = self.checkGchain(ability)"""
         if (pOrS == "p"):
+            if(ability != self.magic.corruption_blast):
+                gchainmult = self.checkGchain(ability)
             for i in range(len(ability.pDmg)):
                 if (i + self.tc >= self.simt):
                     break
@@ -108,6 +118,14 @@ class Bar():
                             self.dmgPrimary[i + self.tc][ability].append(avDmg)
                         else:
                             self.dmgPrimary[i + self.tc][ability] = [avDmg]
+                        if (ability == self.magic.corruption_blast):
+                            gchainmult = self.checkGchain(ability)
+                        if (gchainmult):#add damage to secondary targets if gchain buff is active
+                            if (ability in self.dmgSecondary[i + self.tc]):
+                                self.dmgSecondary[i + self.tc][ability].append(avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                            else:
+                                self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
+                        
                         #check poison proc, call fillHits(posion ability, "p")?
         elif(pOrS == "s"):
             for i in range(len(ability.sDmg)):

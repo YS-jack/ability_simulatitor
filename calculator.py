@@ -134,3 +134,9 @@ class Damage():
                 #print("ave after prayer, other boosts = ", ave)
                 #print()
                 return self.aveDmg
+    
+    def caromingDmgMult(self):
+        return min(1, (3 + CAROMING)/AVERAGENENEMIES)
+    
+    def aoeDmgMult(self, n):
+        return min(1, n/AVERAGENENEMIES)
