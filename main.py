@@ -13,7 +13,7 @@ if __name__ == "__main__":
     
     bar.simulate()
     bar.printSimulationResult()
-    bar.showResutGraph()
+    #bar.showResutGraph()
     
     """
     bar = [magic.sunshine, magic.gchain,magic.dbreath,magic.tsunami,

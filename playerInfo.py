@@ -1,7 +1,9 @@
 #player stat, armour
 ACCURACY = 4360
 STRENGTHBONOUS = 199.2 #for all 3 combat styles
-INQUISITOR = 1 #1 if using inquisitor/hexhunter/omen
+MAXHEALTH = 9900
+AOS = 1 #1 if wearing amulet of souls or essence of finallity amulet
+INQUISITOR = 0 #1 if using inquisitor/hexhunter/omen
 DUALWIELD = 0 #0 if 2h weapon, 1 if dual wield
 STYLEMAGIC = 1
 STYLERANGED = 2
@@ -11,7 +13,7 @@ STYLE = STYLEMAGIC #1 = magic, 2 = ranged, 3 = melee
 #magic wp, spells
 MAGICMHTIER = 90
 MAGICOHTIER = 90
-MAGIC2HTIER = 80
+MAGIC2HTIER = 95
 MHSPELLDMG = 950.4
 OHSPELLDMG = 950.4
 TWOHSPELLDMG = 950.4
@@ -49,8 +51,12 @@ VIGOUR = 0 #0 if not using, 1 if using ring of vigour
 OTHERDMGMULTIPLIER = 1*1 #multiply all other multiplier. e.g. slave amulet(e) and slayer helmet = 1.2 * 1.145.
 #list of multipliers found here : https://runescape.wiki/w/Ability_damage#Other_boosts
 
+#overhead prayers
+SOULSPLIT = 1 #1 if on, 0 if not
+DEFLECTCURSE = 0
+
 #poison wont be calculated if no cinderbane is equipped, since increase will be miniscule
-WEAPONPOISON = 3 #0 if not using weapon poison, 1 if +, 2 if ++, 3 if +++
+WEAPONPOISON = 4 #0 if not using weapon poison, 1 if normal wp, 2 if +, 3 if ++, 4 if +++
 KWUARMINCPOTENCY = 4 #potency of kwuarm incense sticks
 CINDERBANE = 1 #0 if not using, 1 if using cinderbane gloves
 
@@ -67,11 +73,11 @@ RIPPERDEMON = 1
 BLOODREAVER = 0
 
 #invention perks
-RELENTLESS = 5
+RELENTLESS = 0
 RELENTLESSGEARLV = 20
 RELENTLESSCD = 30 #seconds
 
-IMPATIENT = 4
+IMPATIENT = 0
 IMPATIENTGEARLV = 20
 
 BITING = 4
@@ -90,9 +96,17 @@ LUNGING = 0
 CAROMING = 3
 
 MOBSALYER = 1 #1 if have perk of demon/dragon/undead slayer 
+
 #aura
 BERSERKAURA = 0
 INSPIRATIONAURA = 0 #1 if using inspiration aura, 0 if not
+VAMPAURA = 1
+
+#pocket slot 
+VAMPSCRIM = 1 #0 if none, 1 if normal, 2 if superior vamp scrim
+WENBOOK = 0
+JASBOOK = 0
+FULBOOK = 0
 
 #arch relics
 FURYOFTHESMALL = 1 # 0 if inactive, 1 if active
@@ -101,16 +115,21 @@ HEIGHTENEDSENSES = 0
 
 #other
 INITADREN = 100.0 #starting amount of adrenaline, float
-CANNON = 10 #0 if not using, 1 if kinetic cyclone, 2 if oldak coil, 3 if dwarf multi cannon, *10 if upgraded
+CANNON = 10 #0 if not using, 1 if kinetic cyclone, 2 if oldak coil, 3 if dwarf multi cannon, multiply by 10 if upgraded
 AVERAGENENEMIES = 5.5 #average number of enemies you attack at once
 ENEMYHEALTH = 33563
+ENEMYAVERAGEDMG = 1000 #average damage from 1 raw hit (without prayer/any reduction)
+ENEMYATTACKINTERVAL = 1.5 #tick between attacks
 HITCHANCE = 1 #hit chance agianst enemies
 
-#some variables
+
+
+
+####DONT TOUCH , some variables used in script ###
 NOBERSERK = 0
 BERSERK = 1
 SUNSHINE = 2
 DEATHSSWIFTNESS = 3
 NOTACTIVE = 0
 ACTIVE = 1
-POISONPROCCHANCE = 0.9
+POISONPROCCHANCE = 1/6

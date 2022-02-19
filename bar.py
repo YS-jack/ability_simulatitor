@@ -1,12 +1,14 @@
 import math
 import random
 from pickle import TRUE
+from xml.dom.minidom import Notation
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
 import calculator
 from drawGraph import makeGraph
-SIMULATIONTIME = 10 # seconds
+from enemy import Enemy
+SIMULATIONTIME = 5 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -17,11 +19,14 @@ class Bar():
         self.defence = Defence()
         self.const = Const()
         self.otherAbility = OtherAbility()
+        self.otherAbs = [#abilities that dont use gchain buff, not displayed in result graph x axis icon TODO add aftershock and cannon, puncture, blood reaver .. here
+            self.otherAbility.poisonP,self.otherAbility.poisonS,self.otherAbility.noAbility, self.otherAbility.bloodReaverPassive] 
+        self.otherCanHeal = [] #abilities in self.othersAbs but can heal from soulsplit, vamp e.g. reflect damage, cannon(?) wen,jas book(?)
         """self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.dbreath,self.magic.tsunami, self.magic.wild_magic, 
         self.magic.sonic_wave, self.magic.corruption_blast, self.magic.magma_tempest, self.magic.deep_impact, 
         self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.omnipower_igneous]"""
-        self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.tsunami,self.magic.dbreath,
-        self.magic.wild_magic,self.magic.corruption_blast,self.magic.deep_impact,self.magic.magma_tempest,
+        self.bar = [self.magic.wild_magic,self.magic.gchain,self.magic.sunshine, self.magic.tsunami,self.magic.dbreath,
+        self.magic.corruption_blast,self.magic.deep_impact,self.magic.magma_tempest,
         self.magic.sonic_wave,self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.wrack]
         
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
@@ -32,10 +37,12 @@ class Bar():
         self.simAbility = [] #[[ability, ability (activated in same tick, like poison, aftershock, puncture, ...)],[],[],...]       
         self.dmgPrimary = [] #[{"ability1":damage, "ability2":damage,...},{},...]
         self.dmgSecondary = []
+        self.healArray = []
         for i in range(self.simt):
             self.simAbility.append([])
             self.dmgPrimary.append({})
             self.dmgSecondary.append({})
+            self.healArray.append([])
 
         self.relentlessOffcd = 0
         self.dmgPTotal = 0
@@ -50,7 +57,9 @@ class Bar():
         self.damageCap = 12000
         if (GRIMOIRE):
             self.damageCap = 15000
-
+        self.health = MAXHEALTH
+        self.enemy = Enemy()
+        
     def printBarInfo(self):
         for b in self.bar:
             print(self.bar.index(b), b.name,":")
@@ -76,7 +85,8 @@ class Bar():
             self.gchainBuff = ACTIVE
             self.gchainOfftc = self.tc + GCHAINBUFFDUR
     def checkGchain(self, ability):
-        if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability != self.magic.magma_tempest and ability != self.magic.gchain):#if not used yet
+        notApplicableToGchain = [self.magic.magma_tempest, self.magic.gchain] + self.otherAbs
+        if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability not in notApplicableToGchain):#if not used yet
             self.gchainOfftc = 0
             self.gchainBuff = NOTACTIVE
             if (ability == self.magic.corruption_blast):
@@ -85,12 +95,50 @@ class Bar():
                 return 0.5
         else:
             return 0
+    def heal(self): #individual heal, not total of soul split, vamp, etc
+        #heal this tick
+        if (self.health < MAXHEALTH):
+            healthbefore = self.health
+            self.health = min(self.health + sum(self.healArray[self.tc]), MAXHEALTH)
+            print("tick",self.tc,"healed",self.health - healthbefore)
+        
+    def addHealArray(self, avdmg, ability, j):#add healing for 2 tick later
+        if (self.health < MAXHEALTH and self.tc + j + 2 < self.simt and (not ability in self.otherAbs or ability in self.otherCanHeal)): 
+            print("tick",self.tc,"healing from",ability.name)
+            if (SOULSPLIT):
+                if (avdmg > 2000):
+                    under2k = 2000
+                else:
+                    under2k = avdmg
+                if (avdmg > 4000):
+                    between2k4k = 2000
+                    over4k = avdmg - 4000
+                else:
+                    between2k4k = avdmg - 2000
+                    over4k = 0
+                healSoulsplit = (under2k*0.1 + between2k4k*0.05 + over4k*0.0125) * (1 + (0.1875 * AOS))
+                healSoulsplit = math.floor(healSoulsplit)
+                if (healSoulsplit > 0):
+                    self.healArray[self.tc + j + 2].append(healSoulsplit)
+            if (VAMPAURA):
+                healVampAura = math.floor(min(50, avdmg*0.05))
+                self.healArray[self.tc + j + 2].append(healVampAura)
+            if (VAMPSCRIM):
+                healVampScrim = math.floor(min(200, avdmg*0.05))
+                self.healArray[self.tc + j + 2].append(healVampScrim)
+        print(self.healArray)
     def checkPoisonProc(self):
         if (not CINDERBANE):
             return NOTACTIVE
         p = POISONPROCCHANCE
         if (random.random() < p):
             return ACTIVE
+    def takeDamage(self):
+        damage = self.enemy.getAttack(self.tc)
+        self.health -= damage
+        print("tick",self.tc,"took",damage,"damage, health =",self.health)
+        if(self.health<0):
+            print("you died at tick",self.tc)
     def getNextAbility(self):
             if (self.tc == 0):
                 currentAdren = INITADREN
@@ -126,9 +174,9 @@ class Bar():
                         break
                     tickHits = ability.pDmg[i] #tickHits is list of damage done by 1 ability in 1 tick (e.g. omnipower 2nd-4th hits)
                     for j in range(len(tickHits)):#for every hits ability does in a tick
-                        min = ability.pDmg[i][j][0]
-                        max = ability.pDmg[i][j][1]
-                        avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt) #get average damage of 1 hit of tickHits
+                        mini = ability.pDmg[i][j][0]
+                        maxi = ability.pDmg[i][j][1]
+                        avDmg = self.damageInst.getAvDmg(mini, maxi, ability, pOrS, self.berserkUlt) #get average damage of 1 hit of tickHits
                         if (avDmg > self.damageCap):#consider damage cap
                             avDmg = self.damageCap
                         self.dmgPTotal += avDmg #add to damage count
@@ -148,6 +196,8 @@ class Bar():
                             #check poison proc, append to self.simAbility
                             if (self.checkPoisonProc() and self.tc + i + 1< self.simt):
                                 self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonP)
+                            #add healing to self.healArray[], add damage of bloodreaver to later tick
+                            self.addHealArray(avDmg ,ability, j)
 
             elif(pOrS == "s"):
                 for i in range(len(ability.sDmg)):
@@ -155,9 +205,11 @@ class Bar():
                         break
                     tickHits = ability.sDmg[i]
                     for j in range(len(tickHits)):
-                        min = ability.sDmg[i][j][0]
-                        max = ability.sDmg[i][j][1]
-                        avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
+                        mini = ability.sDmg[i][j][0]
+                        maxi = ability.sDmg[i][j][1]
+                        avDmg = self.damageInst.getAvDmg(mini, maxi, ability, pOrS, self.berserkUlt)
+                        if (avDmg > self.damageCap):#consider damage cap
+                            avDmg = self.damageCap
                         if (ability.name != "Poison"):#dont decrease damage when its poison hit (its a single target damage)
                             avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
                         self.dmgSTotal += avDmg
@@ -169,6 +221,9 @@ class Bar():
                             #check poison proc, add to simAbility[self.tc + 1]
                             if (self.checkPoisonProc() and self.tc + i + 1 < self.simt):
                                 self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonS)
+                            #add healing to self.healArray[], add damage of bloodreaver to later tick
+                            for k in range(min(ability.nAOE,math.floor(AVERAGENENEMIES - 1))):
+                                self.addHealArray(avDmg, ability, j)
 
     def renewAdren(self, ability):
         if (ability != self.otherAbility.noAbility and ability != self.otherAbility.poisonP and ability != self.otherAbility.poisonS):#dont add nor subtract adren if ability = noAbility or poison
@@ -200,10 +255,12 @@ class Bar():
 
     def simulate(self):
         while self.tc < self.simt:
+            self.takeDamage()
+            self.heal()
             nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
             self.addSimAbility(nextAbility) #edit simAbility
-            self.fillHits("p") #fill dmgPriamry[{}]
-            self.fillHits("s") #dmgSecondary[{}]
+            self.fillHits("p") #fill dmgPriamry[{}], addHealArray()
+            self.fillHits("s") #dmgSecondary[{}], addHealArray()
             self.renewAdren(nextAbility) #calc adren, edit adren[]
             self.setcd(nextAbility)
             self.tc += 1
@@ -241,15 +298,8 @@ class Bar():
                 print("adren =", self.adren[i])
             for j in range(len(self.simAbility[i])):
                 print("ability activated:", self.simAbility[i][j].name)
-        print("dmgPrimary:[")    
-        for dictTick in self.dmgPrimary:
-            print("{",end="")
-            for abi in dictTick:
-                print("'",abi.name,"'(",abi,"):",dictTick[abi],end=", ")
-            print("},")
     
     def showResutGraph(self):
-        otherAbs = [self.otherAbility.poisonP,self.otherAbility.poisonS] #TODO add aftershock and cannon, puncture, blood reaver .. here
         makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary, self.simAbility, self.bar)
-        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, otherAbs)
-        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar, otherAbs)
+        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, self.otherAbs)
+        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar, self.otherAbs)
