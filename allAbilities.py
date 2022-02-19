@@ -1,5 +1,5 @@
 import abilityDef as Ability
-from playerInfo import DUALWIELD, PLANTEDFEET
+from playerInfo import DUALWIELD, PLANTEDFEET, WEAPONPOISON, CINDERBANE, KWUARMINCPOTENCY
 from timeConvert import stot
 
 BERSERKDUR = 34 #duration of berserk (ticks)
@@ -65,3 +65,13 @@ class Const:
 class OtherAbility:
     def __init__(self):
         self.noAbility = Ability.basic(name="(no ability available)", cd=0.6, dur = 0.6, change=0, pDmg=[[[0,0]]])
+        poisonLV = WEAPONPOISON + CINDERBANE
+        if (poisonLV == 0):
+            poisonMin = 0
+            poisonMax = 0
+        elif(poisonLV > 0):
+            poisonMin = 5 + poisonLV*2
+            poisonMax = 18 + poisonLV*6
+
+        self.poisonP = Ability.basic(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[[poisonMin,poisonMax]]], bleed=1)
+        self.poisonS = Ability.basic(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[[0,0]]],sDmg=[[[poisonMin,poisonMax]]], bleed=1, nAOE=1)

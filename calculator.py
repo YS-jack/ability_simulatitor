@@ -87,6 +87,11 @@ class Damage():
         elif (berserkUlt == NOBERSERK):
             mult *= 1 + BERSERKAURA*0.1
         return mult
+    def bleedBoost(self):#TODO add more boosts that affect bleeds
+        mult = 1
+        if (not DUALWIELD and INQUISITOR):
+            mult *= 1.125
+        return mult
     def getAvDmg(self, min, max, ability, pOrS, berserkUlt):
         if(max == 0):
             return 0
@@ -94,11 +99,14 @@ class Damage():
             if (ability.name == "Dismember" or ability.name == "Combust" or ability.name == "Fragmentation Shot"):
                 max += LUNGING * 4
                 ave = self.round(min*min/max + (max-min)*(max+min)/(max*2))
+                return ave *0.01* self.abilityDmg * self.bleedBoost()
+            elif(ability.name == "Poison"):
+                ave = (min + max) / 2
                 return ave *0.01* self.abilityDmg
             elif (ability.bleed == 1):
                 ave = (min + max) / 2
-                ave = self.round(ave)
-                return ave *0.01* self.abilityDmg
+                ave = self.round(ave) 
+                return ave *0.01* self.abilityDmg * self.bleedBoost()
             else:#non bleeds that perks apply
                 #Precise perk
                 min = min + PRECISE * 0.015 * max

@@ -1,4 +1,5 @@
 import math
+import random
 from pickle import TRUE
 from allAbilities import *
 from timeConvert import stot, ttos
@@ -22,17 +23,20 @@ class Bar():
         self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.tsunami,self.magic.dbreath,
         self.magic.wild_magic,self.magic.corruption_blast,self.magic.deep_impact,self.magic.magma_tempest,
         self.magic.sonic_wave,self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.wrack]
+        
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
+        self.abilityCd = 0
         self.adren = [0]*self.simt
         self.adren[0] = INITADREN
-        self.simAbility = []*self.simt
-        
+        self.simAbility = [] #[[ability, ability (activated in same tick, like poison, aftershock, puncture, ...)],[],[],...]       
         self.dmgPrimary = [] #[{"ability1":damage, "ability2":damage,...},{},...]
         self.dmgSecondary = []
         for i in range(self.simt):
+            self.simAbility.append([])
             self.dmgPrimary.append({})
             self.dmgSecondary.append({})
+
         self.relentlessOffcd = 0
         self.dmgPTotal = 0
         self.dmgSTotal = 0
@@ -81,11 +85,19 @@ class Bar():
                 return 0.5
         else:
             return 0
+    def checkPoisonProc(self):
+        if (not CINDERBANE):
+            return NOTACTIVE
+        p = POISONPROCCHANCE
+        if (random.random() < p):
+            return ACTIVE
     def getNextAbility(self):
             if (self.tc == 0):
                 currentAdren = INITADREN
             else:
                 currentAdren = self.adren[self.tc - 1]
+            if (self.abilityCd > self.tc): #during gcd or still doing channeled
+                return self.otherAbility.noAbility
             for ability in self.bar:
                 if (self.tc >= ability.offcd and currentAdren >= ability.req):
                     self.flagBerserk(ability)#flag self.berserkUlt if ability is berserk variant
@@ -98,63 +110,68 @@ class Bar():
             print("]")
             return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
     def addSimAbility(self, ability):
-            for i in range(ability.dur):
-                if (len(self.simAbility) + 1 > self.simt):
-                    break
-                else:
-                    self.simAbility.append(ability)
-    def fillHits(self, ability, pOrS):
-        #fill hitP and hitS caused by "ability" input, including hits >self.tc
-        self.checkBerserk()
-        if (pOrS == "p"):
-            if(ability != self.magic.corruption_blast):
-                gchainmult = self.checkGchain(ability)
-            for i in range(len(ability.pDmg)):
-                if (i + self.tc >= self.simt):
-                    break
-                tickHits = ability.pDmg[i]
-                for j in range(len(tickHits)):
-                    min = ability.pDmg[i][j][0]
-                    max = ability.pDmg[i][j][1]
-                    avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
-                    if (avDmg > self.damageCap):
-                        avDmg = self.damageCap
-                    self.dmgPTotal += avDmg
-                    if (avDmg > 0):
-                        if (ability in self.dmgPrimary[i + self.tc]):
-                            self.dmgPrimary[i + self.tc][ability].append(avDmg)
-                        else:
-                            self.dmgPrimary[i + self.tc][ability] = [avDmg]
-                        #process for gchain damage caluclation on secondary targets
-                        if (ability == self.magic.corruption_blast):
-                            gchainmult = self.checkGchain(ability)
-                        if (gchainmult):#add damage to secondary targets if gchain buff is active
+            if (len(self.simAbility[self.tc]) < self.simt and ability != self.otherAbility.noAbility):
+                self.simAbility[self.tc].insert(0,ability)
+
+    def fillHits(self, pOrS):#fill hitP and hitS caused by "ability" input, including hits > self.tc
+        if (len(self.simAbility[self.tc]) == 0):
+                return 0
+        for ability in self.simAbility[self.tc]:
+            print(ability.name)
+            self.checkBerserk()
+            if (pOrS == "p"):
+                if(ability != self.magic.corruption_blast):#for gchain maths
+                    gchainmult = self.checkGchain(ability)
+                for i in range(len(ability.pDmg)):#for every hit ability will do
+                    if (i + self.tc >= self.simt):
+                        break
+                    tickHits = ability.pDmg[i] #tickHits is list of damage done by 1 ability in 1 tick (e.g. omnipower 2nd-4th hits)
+                    for j in range(len(tickHits)):
+                        min = ability.pDmg[i][j][0]
+                        max = ability.pDmg[i][j][1]
+                        avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt) #get average damage of 1 hit of tickHits
+                        if (avDmg > self.damageCap):#consider damage cap
+                            avDmg = self.damageCap
+                        self.dmgPTotal += avDmg #add to damage count
+                        if (avDmg > 0):
+                            if (ability in self.dmgPrimary[i + self.tc]):#if ability is already listed in dmgPrimary at same tick
+                                self.dmgPrimary[i + self.tc][ability].append(avDmg) #append
+                            else: #other wise
+                                self.dmgPrimary[i + self.tc][ability] = [avDmg] #make new dictionary index
+                            #process for gchain damage caluclation on secondary targets
+                            if (ability == self.magic.corruption_blast):
+                                gchainmult = self.checkGchain(ability)
+                            if (gchainmult):#add damage to secondary targets if gchain buff is active
+                                if (ability in self.dmgSecondary[i + self.tc]):
+                                    self.dmgSecondary[i + self.tc][ability].append(avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                                else:
+                                    self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
+                            #check poison proc, append to self.simAbility
+                            if (self.checkPoisonProc and self.tc + 1 < self.simt):
+                                self.simAbility[self.tc + 1].append(self.otherAbility.poisonP)
+
+            elif(pOrS == "s"):
+                for i in range(len(ability.sDmg)):
+                    if (i + self.tc >= self.simt):
+                        break
+                    tickHits = ability.sDmg[i]
+                    for j in range(len(tickHits)):
+                        min = ability.sDmg[i][j][0]
+                        max = ability.sDmg[i][j][1]
+                        avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
+                        avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
+                        self.dmgSTotal += avDmg
+                        if (avDmg > 0):
                             if (ability in self.dmgSecondary[i + self.tc]):
-                                self.dmgSecondary[i + self.tc][ability].append(avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                                self.dmgSecondary[i + self.tc][ability].append(avDmg)
                             else:
-                                self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
-                        
-                        #check poison proc, call fillHits(posion ability, "p")?
-        elif(pOrS == "s"):
-            for i in range(len(ability.sDmg)):
-                if (i + self.tc >= self.simt):
-                    break
-                tickHits = ability.sDmg[i]
-                for j in range(len(tickHits)):
-                    min = ability.sDmg[i][j][0]
-                    max = ability.sDmg[i][j][1]
-                    avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
-                    avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
-                    self.dmgSTotal += avDmg
-                    if (avDmg > 0):
-                        if (ability in self.dmgSecondary[i + self.tc]):
-                            self.dmgSecondary[i + self.tc][ability].append(avDmg)
-                        else:
-                            self.dmgSecondary[i + self.tc][ability] = [avDmg]
-                        #check poison proc, call fillHits(posion ability, "s")?
+                                self.dmgSecondary[i + self.tc][ability] = [avDmg]
+                            #check poison proc, add to simAbility[self.tc + 1]
+                            if (self.checkPoisonProc and self.tc + 1 < self.simt):
+                                self.simAbility[self.tc + 1].append(self.otherAbility.poisonS)
 
     def renewAdren(self, ability):
-        if (not ability == self.otherAbility.noAbility):#dont add nor subtract adren if ability = noAbility
+        if (ability != self.otherAbility.noAbility and ability != self.otherAbility.poisonP and ability != self.otherAbility.poisonS):#dont add nor subtract adren if ability = noAbility or poison
             abilityAdrenGain = ability.getAdren(self.tc, self.relentlessOffcd)
             if (abilityAdrenGain == 0):#set relentless on cooldown
                 self.relentlessOffcd = self.tc + stot(RELENTLESSCD)
@@ -168,11 +185,12 @@ class Bar():
                 if (t < self.simt):
                     self.adren[t] += self.adren[t-1]
                     if (self.adren[t] < 0):
-                        print("adrenaline below 0 after using",self.simAbility[self.tc])
+                        print("adrenaline below 0 after using",ability.name)
                     if (self.adren[t] >= 100 + HEIGHTENEDSENSES * 10):
                         self.adren[t] = 100 + HEIGHTENEDSENSES * 10
     def setcd(self, ability):
         ability.offcd = self.tc + ability.cd
+        self.abilityCd = self.tc + ability.cd
     def roundDownHits(self,dmgPS):
         for i in range(len(dmgPS)):
             for index in dmgPS[i]:
@@ -183,11 +201,11 @@ class Bar():
         while self.tc < self.simt:
             nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
             self.addSimAbility(nextAbility) #edit simAbility
-            self.fillHits(nextAbility, "p") #fill dmgPriamry[{}]
-            self.fillHits(nextAbility, "s") #dmgSecondary[{}]
+            self.fillHits("p") #fill dmgPriamry[{}]
+            self.fillHits("s") #dmgSecondary[{}]
             self.renewAdren(nextAbility) #calc adren, edit adren[]
             self.setcd(nextAbility)
-            self.tc += nextAbility.dur
+            self.tc += 1
         self.roundDownHits(self.dmgPrimary)
         self.roundDownHits(self.dmgSecondary)
 
@@ -208,7 +226,7 @@ class Bar():
         for ability in self.bar:
             print(ability.name,end=", ")
         print("]")
-        """for i in range(self.simt):
+        for i in range(self.simt):
             print("tick", i, end=", ")
             print("Primary damage : ",end="")
             for hitAbility in self.dmgPrimary[i]:
@@ -217,13 +235,11 @@ class Bar():
             for hitAbilityS in self.dmgSecondary[i]:
                 print(hitAbilityS.name, self.dmgSecondary[i][hitAbilityS], end=", ")
             if (self.adren[i] == self.adren[i-1]):
-                print("adren = ..", end=", ")
+                print("adren = ..")
             else:
-                print("adren =", self.adren[i], end=", ")
-            if (self.simAbility[i] == self.simAbility[i-1]):
-                print("ability used:    ..")
-            else:
-                print("ability used:", self.simAbility[i].name)"""
+                print("adren =", self.adren[i])
+            for j in range(len(self.simAbility[i])):
+                print("ability activated:", self.simAbility[i][j].name)
             
     
     def showResutGraph(self):

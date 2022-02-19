@@ -49,7 +49,7 @@ VIGOUR = 0 #0 if not using, 1 if using ring of vigour
 OTHERDMGMULTIPLIER = 1*1 #multiply all other multiplier. e.g. slave amulet(e) and slayer helmet = 1.2 * 1.145.
 #list of multipliers found here : https://runescape.wiki/w/Ability_damage#Other_boosts
 
-#poison stuff
+#poison wont be calculated if no cinderbane is equipped, since increase will be miniscule
 WEAPONPOISON = 3 #0 if not using weapon poison, 1 if +, 2 if ++, 3 if +++
 KWUARMINCPOTENCY = 4 #potency of kwuarm incense sticks
 CINDERBANE = 1 #0 if not using, 1 if using cinderbane gloves
@@ -60,7 +60,7 @@ KALDEMONSCROLL = 0 #0 if not using, 1 if using kalg demon scroll
 GRIMOIRE = 0
 REAVERSRING = 1
 STALKERSRING = 0
-CHAMPIONSRING = 0 #3%crit boost to bleeding target, not implemented yet
+CHAMPIONSRING = 0 #3%crit boost to bleeding target, not 
 
 #familiar (kalgerion demon is in crit boost section)
 RIPPERDEMON = 1
@@ -113,3 +113,4 @@ SUNSHINE = 2
 DEATHSSWIFTNESS = 3
 NOTACTIVE = 0
 ACTIVE = 1
+POISONPROCCHANCE = 1/6
