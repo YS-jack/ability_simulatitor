@@ -6,7 +6,7 @@ from timeConvert import stot, ttos
 from playerInfo import *
 import calculator
 from drawGraph import makeGraph
-SIMULATIONTIME = 60 # seconds
+SIMULATIONTIME = 10 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -117,16 +117,15 @@ class Bar():
         if (len(self.simAbility[self.tc]) == 0):
                 return 0
         for ability in self.simAbility[self.tc]:
-            print(ability.name)
             self.checkBerserk()
             if (pOrS == "p"):
                 if(ability != self.magic.corruption_blast):#for gchain maths
                     gchainmult = self.checkGchain(ability)
-                for i in range(len(ability.pDmg)):#for every hit ability will do
+                for i in range(len(ability.pDmg)):#for every tick ability lasts for
                     if (i + self.tc >= self.simt):
                         break
                     tickHits = ability.pDmg[i] #tickHits is list of damage done by 1 ability in 1 tick (e.g. omnipower 2nd-4th hits)
-                    for j in range(len(tickHits)):
+                    for j in range(len(tickHits)):#for every hits ability does in a tick
                         min = ability.pDmg[i][j][0]
                         max = ability.pDmg[i][j][1]
                         avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt) #get average damage of 1 hit of tickHits
@@ -147,8 +146,8 @@ class Bar():
                                 else:
                                     self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
                             #check poison proc, append to self.simAbility
-                            if (self.checkPoisonProc and self.tc + 1 < self.simt):
-                                self.simAbility[self.tc + 1].append(self.otherAbility.poisonP)
+                            if (self.checkPoisonProc() and self.tc + i + 1< self.simt):
+                                self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonP)
 
             elif(pOrS == "s"):
                 for i in range(len(ability.sDmg)):
@@ -159,7 +158,8 @@ class Bar():
                         min = ability.sDmg[i][j][0]
                         max = ability.sDmg[i][j][1]
                         avDmg = self.damageInst.getAvDmg(min, max, ability, pOrS, self.berserkUlt)
-                        avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
+                        if (ability.name != "Poison"):#dont decrease damage when its poison hit (its a single target damage)
+                            avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
                         self.dmgSTotal += avDmg
                         if (avDmg > 0):
                             if (ability in self.dmgSecondary[i + self.tc]):
@@ -167,8 +167,8 @@ class Bar():
                             else:
                                 self.dmgSecondary[i + self.tc][ability] = [avDmg]
                             #check poison proc, add to simAbility[self.tc + 1]
-                            if (self.checkPoisonProc and self.tc + 1 < self.simt):
-                                self.simAbility[self.tc + 1].append(self.otherAbility.poisonS)
+                            if (self.checkPoisonProc() and self.tc + i + 1 < self.simt):
+                                self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonS)
 
     def renewAdren(self, ability):
         if (ability != self.otherAbility.noAbility and ability != self.otherAbility.poisonP and ability != self.otherAbility.poisonS):#dont add nor subtract adren if ability = noAbility or poison
@@ -189,8 +189,9 @@ class Bar():
                     if (self.adren[t] >= 100 + HEIGHTENEDSENSES * 10):
                         self.adren[t] = 100 + HEIGHTENEDSENSES * 10
     def setcd(self, ability):
-        ability.offcd = self.tc + ability.cd
-        self.abilityCd = self.tc + ability.cd
+        if (ability != self.otherAbility.noAbility):
+            ability.offcd = self.tc + ability.cd
+            self.abilityCd = self.tc + ability.dur
     def roundDownHits(self,dmgPS):
         for i in range(len(dmgPS)):
             for index in dmgPS[i]:
@@ -240,9 +241,15 @@ class Bar():
                 print("adren =", self.adren[i])
             for j in range(len(self.simAbility[i])):
                 print("ability activated:", self.simAbility[i][j].name)
-            
+        print("dmgPrimary:[")    
+        for dictTick in self.dmgPrimary:
+            print("{",end="")
+            for abi in dictTick:
+                print("'",abi.name,"'(",abi,"):",dictTick[abi],end=", ")
+            print("},")
     
     def showResutGraph(self):
+        otherAbs = [self.otherAbility.poisonP,self.otherAbility.poisonS] #TODO add aftershock and cannon, puncture, blood reaver .. here
         makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary, self.simAbility, self.bar)
-        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar)
-        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar)
+        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, otherAbs)
+        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar, otherAbs)
