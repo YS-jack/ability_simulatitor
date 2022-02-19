@@ -85,7 +85,7 @@ class makeGraph():
             )
         fig.show()
 
-    def pDetail(dmgP, abilityOrder, bar,otherAbList):
+    def pDetail(dmgP, abilityOrder, bar, otherAbList, dps):
         x = list(range(len(dmgP)))
         abilityDmgData = {}
         barAndOtherAb = bar + otherAbList
@@ -106,7 +106,7 @@ class makeGraph():
             abilityDmgDataAll.append(go.Bar(name=index, x=x, y=abilityDmgDataName[index]))
         fig = go.Figure(data=abilityDmgDataAll)
         fig.update_layout(barmode="stack", bargap=0)
-        fig.update_xaxes(title_text='Tick and Used Abilities', title_font = {"size": 20})
+        fig.update_xaxes(title_text='Tick and Used Abilities (Primary target) ('+str(dps)+' dps)', title_font = {"size": 20})
         fig.update_yaxes(title_text='Damage on Primary target', title_font = {"size": 20})
 
         #from below, same as other 2
@@ -161,7 +161,7 @@ class makeGraph():
         fig.show()
 
 
-    def sDetail(dmgS, abilityOrder, bar, otherAbList):
+    def sDetail(dmgS, abilityOrder, bar, otherAbList, dps):
         x = list(range(len(dmgS)))
         abilityDmgData = {}
         barAndOtherAb = bar + otherAbList
@@ -181,26 +181,8 @@ class makeGraph():
         for index in abilityDmgDataName:
             abilityDmgDataAll.append(go.Bar(name=index, x=x, y=abilityDmgDataName[index]))
         fig = go.Figure(data=abilityDmgDataAll)
-
-
-        """x = list(range(len(dmgS)))
-        abilityDmgData = {}
-        barAndOtherAb = bar + otherAbList
-        for ability in barAndOtherAb:
-            abilityDmgData[ability.name] = []
-            for hitsInTickDict in dmgS:
-                if (ability in hitsInTickDict):
-                    abilityDmgData[ability.name].append(sum(hitsInTickDict[ability]))
-                else:
-                    abilityDmgData[ability.name].append(0)
-            if(sum(abilityDmgData[ability.name]) == 0):
-                del abilityDmgData[ability.name]
-        abilityDmgDataAll = []
-        for index in abilityDmgData:
-            abilityDmgDataAll.append(go.Bar(name=index, x=x, y=abilityDmgData[index]))
-        fig = go.Figure(data=abilityDmgDataAll)"""
         fig.update_layout(barmode="stack", bargap=0)
-        fig.update_xaxes(title_text='Tick and Used Abilities', title_font = {"size": 20})
+        fig.update_xaxes(title_text='Tick and Used Abilities (Secondary targets\'average) ('+str(dps)+' dps)', title_font = {"size": 20})
         fig.update_yaxes(title_text='Average damage on Secondary targets', title_font = {"size": 20})
 
         #from below, same as other 2

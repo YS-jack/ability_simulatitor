@@ -8,7 +8,7 @@ from playerInfo import *
 import calculator
 from drawGraph import makeGraph
 from enemy import Enemy
-SIMULATIONTIME = 5 # seconds
+SIMULATIONTIME = 60*3 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -43,7 +43,7 @@ class Bar():
             self.dmgPrimary.append({})
             self.dmgSecondary.append({})
             self.healArray.append([])
-
+        
         self.relentlessOffcd = 0
         self.dmgPTotal = 0
         self.dmgSTotal = 0
@@ -101,32 +101,54 @@ class Bar():
             healthbefore = self.health
             self.health = min(self.health + sum(self.healArray[self.tc]), MAXHEALTH)
             print("tick",self.tc,"healed",self.health - healthbefore)
-        
+        else:
+            print("tick",self.tc,"healed 0 becuase hp is full at", self.health)
+    def addReaverDmg(self):#blood reaver passive damage
+        if (self.tc >= 2 and BLOODREAVER):
+            for h in self.healArray[self.tc - 3]: # apply hits 3 tick later, like ingame
+                if (h != 0):
+                    passiveDmg = math.floor(h/3)
+                    if (self.otherAbility.bloodReaverPassive in self.dmgPrimary[self.tc]):#if self.otherAbility.bloodReaverPassive is already listed in dmgPrimary at same tick
+                        self.dmgPrimary[self.tc][self.otherAbility.bloodReaverPassive].append(passiveDmg) #append
+                    else: #other wise
+                        self.dmgPrimary[self.tc][self.otherAbility.bloodReaverPassive] = [passiveDmg] #make new dictionary index
+                    if (self.checkPoisonProc() and self.tc + 1 < self.simt):#add poison proc
+                        print(self.otherAbility.bloodReaverPassive.name,"at tick",self.tc,"activated poison")
+                        self.simAbility[self.tc + 1].append(self.otherAbility.poisonP)
     def addHealArray(self, avdmg, ability, j):#add healing for 2 tick later
-        if (self.health < MAXHEALTH and self.tc + j + 2 < self.simt and (not ability in self.otherAbs or ability in self.otherCanHeal)): 
-            print("tick",self.tc,"healing from",ability.name)
+        if (self.health < MAXHEALTH and self.tc + j < self.simt and (not ability in self.otherAbs or ability in self.otherCanHeal)): 
+            print("tick",self.tc + j," : heal point from",ability.name,"added to healArray[",self.tc+j,"]", end=": ")
             if (SOULSPLIT):
-                if (avdmg > 2000):
-                    under2k = 2000
-                else:
+                if (0 < avdmg <= 2000):
                     under2k = avdmg
-                if (avdmg > 4000):
-                    between2k4k = 2000
-                    over4k = avdmg - 4000
-                else:
+                    between2k4k = 0
+                    over4k = 0
+                elif (2000 < avdmg and avdmg <= 4000):
+                    under2k = 2000
                     between2k4k = avdmg - 2000
                     over4k = 0
+                else:
+                    under2k = 2000
+                    between2k4k = 2000
+                    over4k = avdmg - 4000
                 healSoulsplit = (under2k*0.1 + between2k4k*0.05 + over4k*0.0125) * (1 + (0.1875 * AOS))
                 healSoulsplit = math.floor(healSoulsplit)
                 if (healSoulsplit > 0):
-                    self.healArray[self.tc + j + 2].append(healSoulsplit)
+                    self.healArray[self.tc + j].append(healSoulsplit)
+                    print("soulsplit heal :",healSoulsplit,end=", ")
             if (VAMPAURA):
                 healVampAura = math.floor(min(50, avdmg*0.05))
-                self.healArray[self.tc + j + 2].append(healVampAura)
-            if (VAMPSCRIM):
+                print("vamp aura heal :",healVampAura,end=",")
+                self.healArray[self.tc + j].append(healVampAura)
+            if (VAMPSCRIM == 1):
                 healVampScrim = math.floor(min(200, avdmg*0.05))
-                self.healArray[self.tc + j + 2].append(healVampScrim)
-        print(self.healArray)
+                print("vamp scrim heal :",healVampScrim, end=", ")
+                self.healArray[self.tc + j].append(healVampScrim)
+            if (VAMPSCRIM == 2):
+                healSupVampScrim = math.floor(min(200, avdmg*0.0667))
+                print("sup vamp scrim heal :",healSupVampScrim, end="")
+                self.healArray[self.tc + j].append(healSupVampScrim)
+            print()
     def checkPoisonProc(self):
         if (not CINDERBANE):
             return NOTACTIVE
@@ -136,7 +158,6 @@ class Bar():
     def takeDamage(self):
         damage = self.enemy.getAttack(self.tc)
         self.health -= damage
-        print("tick",self.tc,"took",damage,"damage, health =",self.health)
         if(self.health<0):
             print("you died at tick",self.tc)
     def getNextAbility(self):
@@ -161,7 +182,7 @@ class Bar():
             if (len(self.simAbility[self.tc]) < self.simt and ability != self.otherAbility.noAbility):
                 self.simAbility[self.tc].insert(0,ability)
 
-    def fillHits(self, pOrS):#fill hitP and hitS caused by "ability" input, including hits > self.tc
+    def fillHits(self, pOrS):#fill hitP and hitS caused by "ability" input, including hits > self.tc, 
         if (len(self.simAbility[self.tc]) == 0):
                 return 0
         for ability in self.simAbility[self.tc]:
@@ -195,9 +216,10 @@ class Bar():
                                     self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
                             #check poison proc, append to self.simAbility
                             if (self.checkPoisonProc() and self.tc + i + 1< self.simt):
+                                print(ability.name,"at tick",self.tc,"activated poison")
                                 self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonP)
-                            #add healing to self.healArray[], add damage of bloodreaver to later tick
-                            self.addHealArray(avDmg ,ability, j)
+                            #add healing to self.healArray[]
+                            self.addHealArray(avDmg ,ability, i)
 
             elif(pOrS == "s"):
                 for i in range(len(ability.sDmg)):
@@ -220,10 +242,11 @@ class Bar():
                                 self.dmgSecondary[i + self.tc][ability] = [avDmg]
                             #check poison proc, add to simAbility[self.tc + 1]
                             if (self.checkPoisonProc() and self.tc + i + 1 < self.simt):
+                                print(ability.name,"at tick",self.tc,"activated poison")
                                 self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonS)
                             #add healing to self.healArray[], add damage of bloodreaver to later tick
                             for k in range(min(ability.nAOE,math.floor(AVERAGENENEMIES - 1))):
-                                self.addHealArray(avDmg, ability, j)
+                                self.addHealArray(avDmg, ability, i)
 
     def renewAdren(self, ability):
         if (ability != self.otherAbility.noAbility and ability != self.otherAbility.poisonP and ability != self.otherAbility.poisonS):#dont add nor subtract adren if ability = noAbility or poison
@@ -256,11 +279,12 @@ class Bar():
     def simulate(self):
         while self.tc < self.simt:
             self.takeDamage()
-            self.heal()
             nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
             self.addSimAbility(nextAbility) #edit simAbility
             self.fillHits("p") #fill dmgPriamry[{}], addHealArray()
             self.fillHits("s") #dmgSecondary[{}], addHealArray()
+            self.heal()#heal
+            self.addReaverDmg()# apply damage of blood reaver passive
             self.renewAdren(nextAbility) #calc adren, edit adren[]
             self.setcd(nextAbility)
             self.tc += 1
@@ -270,21 +294,21 @@ class Bar():
     def printSimulationResult(self):
         print("simulation time\t=", ttos(self.simt),"seconds")
         print()
-        print("Primary dmg/s \t\t=",self.dmgPTotal/ttos(self.simt))
-        print("Primary dmg/min \t=",self.dmgPTotal*60/ttos(self.simt))
-        print("average time to kill primary enemy \t", ENEMYHEALTH/(self.dmgPTotal/ttos(self.simt)))
+        print("Primary dmg/s \t\t=",math.floor(self.dmgPTotal/ttos(self.simt)))
+        print("Primary dmg/min \t=",math.floor(self.dmgPTotal*60/ttos(self.simt)))
+        print("average time to kill primary enemy \t", math.floor(ENEMYHEALTH/(self.dmgPTotal/ttos(self.simt))))
         print("Total primary damage\t=",self.dmgPTotal)
         print()
-        print("Secondary dmg/s \t=",self.dmgSTotal/ttos(self.simt))
-        print("Secondary dmg/min \t=",self.dmgSTotal*60/ttos(self.simt))
-        print("average time to kill secondary enemy \t", ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt)))
+        print("Secondary dmg/s \t=",math.floor(self.dmgSTotal/ttos(self.simt)))
+        print("Secondary dmg/min \t=",math.floor(self.dmgSTotal*60/ttos(self.simt)))
+        print("average time to kill secondary enemy \t", math.floor(ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt))))
         print("Total secondary damage\t=",self.dmgSTotal)
         print()
         print("[",end="")
         for ability in self.bar:
             print(ability.name,end=", ")
         print("]")
-        for i in range(self.simt):
+        """for i in range(self.simt):
             print("tick", i, end=", ")
             print("Primary damage : ",end="")
             for hitAbility in self.dmgPrimary[i]:
@@ -297,9 +321,9 @@ class Bar():
             else:
                 print("adren =", self.adren[i])
             for j in range(len(self.simAbility[i])):
-                print("ability activated:", self.simAbility[i][j].name)
+                print("ability activated:", self.simAbility[i][j].name,"at tick",i)"""
     
     def showResutGraph(self):
         makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary, self.simAbility, self.bar)
-        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, self.otherAbs)
-        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar, self.otherAbs)
+        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, self.otherAbs, math.floor(self.dmgPTotal/ttos(self.simt)))
+        makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar, self.otherAbs, math.floor(self.dmgSTotal/ttos(self.simt)))

@@ -52,7 +52,7 @@ OTHERDMGMULTIPLIER = 1*1 #multiply all other multiplier. e.g. slave amulet(e) an
 #list of multipliers found here : https://runescape.wiki/w/Ability_damage#Other_boosts
 
 #overhead prayers
-SOULSPLIT = 1 #1 if on, 0 if not
+SOULSPLIT = 0 #1 if on, 0 if not
 DEFLECTCURSE = 0
 
 #poison wont be calculated if no cinderbane is equipped, since increase will be miniscule
@@ -103,7 +103,7 @@ INSPIRATIONAURA = 0 #1 if using inspiration aura, 0 if not
 VAMPAURA = 1
 
 #pocket slot 
-VAMPSCRIM = 1 #0 if none, 1 if normal, 2 if superior vamp scrim
+VAMPSCRIM = 0 #0 if none, 1 if normal, 2 if superior vamp scrim
 WENBOOK = 0
 JASBOOK = 0
 FULBOOK = 0

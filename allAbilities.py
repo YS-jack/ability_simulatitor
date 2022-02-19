@@ -1,3 +1,4 @@
+from turtle import pd
 from unicodedata import name
 import abilityDef as Ability
 from playerInfo import DUALWIELD, PLANTEDFEET, WEAPONPOISON, CINDERBANE, KWUARMINCPOTENCY
@@ -21,7 +22,7 @@ class Magic:
     def __init__(self):#cd = seconds
         iLoc = "./ability_icons/magic/"#location of where the icon is stored
         #damage array meaning  [[[min damage, max damage]]  <- damage splat in a single tick]<-ability's damage each tick
-        self.asphyx = Ability.thresh(name="Asphyxiate", cd=20, dur = 6*0.6, pDmg=[[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]]], icon=iLoc+"Asphixiate.png")
+        self.asphyx = Ability.thresh(name="Asphyxiate", cd=20, dur = 7*0.6, pDmg=[[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]]], icon=iLoc+"Asphixiate.png")
         self.deep_impact = Ability.thresh(name="Deep Impact", cd=15, pDmg=[[[0,0]],[[40,200]]], icon=iLoc+"Deep_Impact.png")
         self.dbreath = Ability.basic(name="Dragon Breath", cd=10, nAOE=4, pDmg=[[[0,0]],[[37,188]]], sDmg=[[[0,0]],[[37,188]]],icon=iLoc+"Dragon_Breath.png")
         self.gchain = Ability.basic(name="Greater Chain", cd=10, nAOE=2, pDmg=[[[0,0]],[[20,100]]], sDmg=[[[0,0]],[[20,100]]],icon=iLoc+"Greater_Chain.png")
@@ -57,7 +58,7 @@ class Range:
 class Defence:
     def __init__(self):
         iLoc = "./ability_icons/defence/"
-        self.devotion = Ability.thresh(name="Devotion", cd=30,icon=iLoc+"Devotion.png")
+        self.devotion = Ability.thresh(name="Devotion", cd=30,icon=iLoc+"Devotion.png",pDmg=[[[0,0]]])
 class Const:
     def __init__(self):
         iLoc = "./ability_icons/constitution/"
@@ -76,4 +77,4 @@ class OtherAbility:
 
         self.poisonP = Ability.basic(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[[poisonMin,poisonMax]]], bleed=1)
         self.poisonS = Ability.basic(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[[0,0]]],sDmg=[[[poisonMin,poisonMax]]], bleed=1, nAOE=1)
-        self.bloodReaverPassive = Ability.basic(name="Blood Reaver Passive", cd=0,dur=0,req=0,pDmg=[[[1,7000]]])
+        self.bloodReaverPassive = Ability.basic(name="Blood Reaver Passive", cd=0,dur=0,req=0,pDmg=[[[1,1]]])
