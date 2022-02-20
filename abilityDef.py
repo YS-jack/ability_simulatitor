@@ -42,7 +42,7 @@ class Ability:
 #nAOE = number of secondary targets. doesnt include primary (e.g. dbreath's naoe = 4 not 5)
 
 class basic(Ability):
-    def __init__(self, name, cd = 10, dur = 1.8, req = 0, change = 8, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[[0,0]]],icon="./ability_icons/magic/Wrack.png"): 
+    def __init__(self, name, cd = 10, dur = 1.8, req = 0, change = 8, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"): 
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
         if (self.name == "Chain" or self.name == "Greater Chain" or self.name == "Riccochet" or self.name == "Greater Riccochet"):
             self.nAOE = 2 + CAROMING
@@ -53,7 +53,7 @@ class basic(Ability):
             return self.change + impatientBonous()
 
 class thresh(Ability):
-    def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[[0,0]]],icon="./ability_icons/magic/Wrack.png"):
+    def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
     def getAdren(self, tc, relentlessOffcd):
         if (tc >= relentlessOffcd and relentlessProc()):
@@ -62,7 +62,7 @@ class thresh(Ability):
             return self.change
 
 class ult(Ability):
-    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, nAOE = 0, pDmg = [[[0,0]]], sDmg = [[[0,0]]],icon="./ability_icons/magic/Wrack.png"):
+    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, nAOE = 0, pDmg = [[[0,0]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
     def getAdren(self, tc, relentlessOffcd):
         if (tc >= relentlessOffcd and relentlessProc()):

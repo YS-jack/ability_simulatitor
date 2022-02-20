@@ -9,20 +9,21 @@ if __name__ == "__main__":
     range = Range()
     defence = Defence()
     const = Const()
-    bar = Bar()
-    
-    """bar.simulate()
+    """bar = Bar()
+    bar.bar = [magic.sunshine, magic.gchain,magic.dbreath,magic.tsunami,
+    magic.wild_magic,magic.corruption_blast,magic.deep_impact,magic.magma_tempest,
+    magic.sonic_wave,defence.devotion, const.tuska, magic.combust]
+    bar.simulate()
     bar.printSimulationResult()
     bar.showResutGraph()"""
     
     
-    """bar = [magic.sunshine, magic.gchain,magic.dbreath,magic.tsunami,
-    magic.wild_magic,magic.corruption_blast,magic.deep_impact,magic.magma_tempest,
-    magic.sonic_wave,defence.devotion, const.tuska, magic.combust]"""
+    
 
-    pool = [magic.sonic_wave, magic.gchain, magic.dbreath, magic.corruption_blast,
-    magic.magma_tempest, magic.wild_magic, magic.deep_impact, magic.omnipower_igneous,
-    magic.tsunami, magic.sunshine, const.tuska, magic.corruption_blast, defence.devotion]
+    pool = [magic.corruption_blast,magic.dbreath,magic.sonic_wave, magic.gchain, magic.magma_tempest, const.tuska]
+    #print(pool)
+    """, magic.wild_magic, magic.deep_impact, magic.omnipower_igneous,
+    magic.tsunami, magic.sunshine, const.tuska"""
 
     optimizer = Optimizer()
     optimizer.findBestAOE(pool)

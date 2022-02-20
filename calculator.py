@@ -36,7 +36,7 @@ class Damage():
                 self.abilityDmg = mhBaseDmg + ohBaseDmg
             else:
                 self.abilityDmg = 3.75*self.strlv + MELEE2HDMG*MELEESPEED2H + 1.5*STRENGTHBONOUS
-        print("ability damage =", self.abilityDmg)
+        #print("ability damage =", self.abilityDmg)
 
     def getLVBoost(self):
         if (STYLE == STYLEMAGIC):
@@ -94,6 +94,7 @@ class Damage():
         return mult
     def getAvDmg(self, min, max, ability, pOrS, berserkUlt):
         if(max == 0):
+            #print("max hit of",ability.name,"was 0, so average damage = 0")
             return 0
         else:
             if (ability.name == "Dismember" or ability.name == "Combust" or ability.name == "Fragmentation Shot"):
