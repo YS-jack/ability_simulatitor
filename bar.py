@@ -118,7 +118,7 @@ class Bar():
                         self.dmgPrimary[self.tc][self.otherAbility.bloodReaverPassive].append(passiveDmg) #append
                     else: #other wise
                         self.dmgPrimary[self.tc][self.otherAbility.bloodReaverPassive] = [passiveDmg] #make new dictionary index
-                    if (self.checkPoisonProc() and self.tc + 1 < self.simt):#add poison proc
+                    if (self.checkPoisonProc(self.otherAbility.bloodReaverPassive) and self.tc + 1 < self.simt):#add poison proc
                         #print(self.otherAbility.bloodReaverPassive.name,"at tick",self.tc,"activated poison")
                         self.simAbility[self.tc + 1].append(self.otherAbility.poisonP)
     def addHealArray(self, avdmg, ability, j):#add healing for 2 tick later
@@ -155,11 +155,12 @@ class Bar():
                 #print("sup vamp scrim heal :",healSupVampScrim, end="")
                 self.healArray[self.tc + j].append(healSupVampScrim)
             #print()
-    def checkPoisonProc(self):
+    def checkPoisonProc(self, ability):
         if (not CINDERBANE):
             return NOTACTIVE
         p = POISONPROCCHANCE
-        self.poisonProcAttempts += 1
+        if (ability != self.otherAbility.poisonP and ability != self.otherAbility.poisonS):
+            self.poisonProcAttempts += 1
         if (random.random() < p):
             return ACTIVE
     def takeDamage(self):
@@ -233,7 +234,7 @@ class Bar():
                                 else:
                                     self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
                             #check poison proc, append to self.simAbility
-                            if (self.checkPoisonProc() and self.tc + i + 1< self.simt):
+                            if (self.checkPoisonProc(ability) and self.tc + i + 1< self.simt):
                                 #print(ability.name,"at tick",self.tc,"activated poison")
                                 self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonP)
                             #add healing to self.healArray[]
@@ -262,7 +263,7 @@ class Bar():
                             else:
                                 self.dmgSecondary[i + self.tc][ability] = [avDmg]
                             #check poison proc, add to simAbility[self.tc + 1]
-                            if (self.checkPoisonProc() and self.tc + i + 1 < self.simt):
+                            if (self.checkPoisonProc(ability) and self.tc + i + 1 < self.simt):
                                 #print(ability.name,"at tick",self.tc,"activated poison")
                                 self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonS)
                             #add healing to self.healArray[], add damage of bloodreaver to later tick, * number of enemies or nAOE
@@ -355,9 +356,9 @@ class Bar():
         return math.floor(self.dmgSTotal/ttos(self.simt))
 
     def getExpectedDpsP(self):
-        return (self.totalDmgNoPoisonP + self.poisonProcAttempts * (self.otherAbility.poisonP.pDmg[0][0][0] + self.otherAbility.poisonP.pDmg[0][0][1]) * self.damageInst.abilityDmg * 0.01 / 2)/ttos(self.simt)*POISONPROCCHANCE
+        return math.floor((self.totalDmgNoPoisonP + self.poisonProcAttempts * (self.otherAbility.poisonP.pDmg[0][0][0] + self.otherAbility.poisonP.pDmg[0][0][1]) * self.damageInst.abilityDmg * 0.01 / 2)/ttos(self.simt)*POISONPROCCHANCE)
     def getExpectedDpsS(self):
-        return (self.totalDmgNoPoisonS + self.poisonProcAttempts * (self.otherAbility.poisonS.sDmg[0][0][0] + self.otherAbility.poisonS.sDmg[0][0][1]) * self.damageInst.abilityDmg * 0.01 / 2)/ttos(self.simt)*POISONPROCCHANCE
+        return math.floor((self.totalDmgNoPoisonS + self.poisonProcAttempts * (self.otherAbility.poisonS.sDmg[0][0][0] + self.otherAbility.poisonS.sDmg[0][0][1]) * self.damageInst.abilityDmg * 0.01 / 2)/ttos(self.simt)*POISONPROCCHANCE)
     
     def showResutGraph(self):
         #makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary, self.simAbility, self.bar)

@@ -20,7 +20,7 @@ class Optimizer():
         return l
 
 
-    def findBestAOE(self, pool):#TODO save top 5 just in case?
+    def findTopAOE(self, pool):#TODO save top 5 just in case?
         bestDmg = 0
         barInst = [Bar()]
         for barPattern in self.permutation(pool):
@@ -36,7 +36,7 @@ class Optimizer():
                 for ability in barPattern:
                     print(ability.name,end=", ")
                 print("]\texpected damage on secondary targets(average) =",barInst[0].getExpectedDpsS(),end="\n\n")
-                
+
                 bestDmg = barInst[0].getExpectedDpsS()
                 bestBarPattern = barPattern
         self.printBestBarInfo(bestBarPattern)

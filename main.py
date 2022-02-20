@@ -26,4 +26,4 @@ if __name__ == "__main__":
     magic.tsunami, magic.sunshine"""
 
     optimizer = Optimizer()
-    optimizer.findBestAOE(pool)
+    optimizer.findTopAOE(pool) #get top n bars
