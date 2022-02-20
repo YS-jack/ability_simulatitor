@@ -20,10 +20,10 @@ if __name__ == "__main__":
     
     
 
-    pool = [magic.corruption_blast,magic.dbreath,magic.sonic_wave, magic.gchain, magic.magma_tempest, const.tuska]
+    pool = [magic.corruption_blast,magic.dbreath,magic.sonic_wave, magic.gchain, magic.magma_tempest, const.tuska, magic.wrack]
     #print(pool)
     """, magic.wild_magic, magic.deep_impact, magic.omnipower_igneous,
-    magic.tsunami, magic.sunshine, const.tuska"""
+    magic.tsunami, magic.sunshine"""
 
     optimizer = Optimizer()
     optimizer.findBestAOE(pool)

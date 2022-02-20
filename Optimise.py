@@ -31,13 +31,12 @@ class Optimizer():
             del barInst[0]
             barInst[0].bar=barPattern
             barInst[0].simulate()
-
-            print("[",end="")
-            for ability in barPattern:
-                print(ability.name,end=" ")
-            print("]\n\texpected damage on secondary targets(average) =",barInst[0].getExpectedDpsS(),end="\n\n")
-
             if (bestDmg < barInst[0].getExpectedDpsS()):
+                print("[",end="")
+                for ability in barPattern:
+                    print(ability.name,end=", ")
+                print("]\texpected damage on secondary targets(average) =",barInst[0].getExpectedDpsS(),end="\n\n")
+                
                 bestDmg = barInst[0].getExpectedDpsS()
                 bestBarPattern = barPattern
         self.printBestBarInfo(bestBarPattern)

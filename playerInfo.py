@@ -64,13 +64,13 @@ CINDERBANE = 1 #0 if not using, 1 if using cinderbane gloves
 KALDEMON = 0 #0 if not using, 1 if using kalgelion demon
 KALDEMONSCROLL = 0 #0 if not using, 1 if using kalg demon scroll
 GRIMOIRE = 0
-REAVERSRING = 1
+REAVERSRING = 0
 STALKERSRING = 0
 CHAMPIONSRING = 0 #3%crit boost to bleeding target, not 
 
 #familiar (kalgerion demon is in crit boost section)
-RIPPERDEMON = 1
-BLOODREAVER = 0
+RIPPERDEMON = 0
+BLOODREAVER = 1
 
 #invention perks
 RELENTLESS = 0
@@ -80,7 +80,7 @@ RELENTLESSCD = 30 #seconds
 IMPATIENT = 0
 IMPATIENTGEARLV = 20
 
-BITING = 4
+BITING = 0
 BITINGGEARLV = 19
 
 INVIGORATING = 0
@@ -132,4 +132,4 @@ SUNSHINE = 2
 DEATHSSWIFTNESS = 3
 NOTACTIVE = 0
 ACTIVE = 1
-POISONPROCCHANCE = 1/2
+POISONPROCCHANCE = 1/6

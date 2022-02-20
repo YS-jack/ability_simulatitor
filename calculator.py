@@ -70,7 +70,7 @@ class Damage():
         return BITING * 0.02 * (1 + math.floor(BITINGGEARLV/20)*0.1) + GRIMOIRE*0.12 + STALKERSRING*0.03 + REAVERSRING*0.05 + KALDEMON*0.01 + KALDEMONSCROLL*0.05
     def rollCritChance(self):
         p = self.getCritChance()
-        if (random.random() < p):
+        if (random.random() < p and p != 0):
             return TRUE
         else:
             return FALSE
