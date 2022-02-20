@@ -20,8 +20,10 @@ class Optimizer():
         return l
 
 
-    def findTopAOE(self, pool):#TODO save top 5 just in case?
-        bestDmg = 0
+    def findTopAOE(self, pool, topN):#TODO save top 5 just in case?
+        topDmgS = [0]
+        topDmgP = [0]
+        topDmgBars = [Bar()]
         barInst = [Bar()]
         for barPattern in self.permutation(pool):
             #init ability cd
@@ -31,15 +33,32 @@ class Optimizer():
             del barInst[0]
             barInst[0].bar=barPattern
             barInst[0].simulate()
-            if (bestDmg < barInst[0].getExpectedDpsS()):
-                print("[",end="")
-                for ability in barPattern:
-                    print(ability.name,end=", ")
-                print("]\texpected damage on secondary targets(average) =",barInst[0].getExpectedDpsS(),end="\n\n")
+            #find if in top topN
+            if (topDmgS[-1] < barInst[0].getExpectedDpsS()):
+                for i in range(len(topDmgS)):
+                    if(topDmgS[i] < barInst[0].getExpectedDpsS()):
+                        topDmgS.insert(i, barInst[0].getExpectedDpsS())
+                        topDmgBars.insert(i, barPattern)
+                        topDmgP.insert(i, barInst[0].getExpectedDpsP())
+                        if (i == 0):
+                            print("[",end="")
+                            for ability in barPattern:
+                                print(ability.name,end=", ")
+                            print("]\texpected damage on secondary targets(average) =",barInst[0].getExpectedDpsS(),end="\n\n")
+                        if (len(topDmgS) > topN):
+                            del topDmgS[-1]
+                            del topDmgBars[-1]
+                            del topDmgP[-1]
+                        break
 
-                bestDmg = barInst[0].getExpectedDpsS()
-                bestBarPattern = barPattern
-        self.printBestBarInfo(bestBarPattern)
+        print("top",topN,"bars:")
+        for i in range(len(topDmgBars)):
+            print("[",end="")
+            for ability in topDmgBars[i]:
+                print(ability.name,end=", ")
+            print("]\texpected primary dps =",topDmgP[i],", secondary dps =",topDmgS[i],end="\n\n")
+
+        self.printBestBarInfo(topDmgBars[0])
         
     def printBestBarInfo(self, bestBarPattern):
         for ability in bestBarPattern:
@@ -47,6 +66,6 @@ class Optimizer():
         barInst = Bar()
         barInst.bar = bestBarPattern
         barInst.simulate()
-        print("*************\tinfo of best bar:")
-        barInst.printSimulationResult()
+        #print("*************\tinfo of best bar:")
+        #barInst.printSimulationResult()
         barInst.showResutGraph()

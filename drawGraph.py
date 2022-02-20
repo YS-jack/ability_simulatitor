@@ -165,6 +165,7 @@ class makeGraph():
         x = list(range(len(dmgS)))
         abilityDmgData = {}
         barAndOtherAb = bar + otherAbList
+        
         for ability in barAndOtherAb:
             abilityDmgData[ability] = []
             for hitsInTickDict in dmgS:

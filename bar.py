@@ -91,7 +91,9 @@ class Bar():
             self.gchainOfftc = self.tc + GCHAINBUFFDUR
     def checkGchain(self, ability):
         notApplicableToGchain = [self.magic.magma_tempest, self.magic.gchain] + self.otherAbs
+        print("self.gchainOfftc =",self.gchainOfftc,", self.tc =",self.tc)
         if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability not in notApplicableToGchain):#if not used yet
+            print("gchain buff activated for",ability.name)
             self.gchainOfftc = 0
             self.gchainBuff = NOTACTIVE
             if (ability == self.magic.corruption_blast):
@@ -103,8 +105,8 @@ class Bar():
     def heal(self): #individual heal, not total of soul split, vamp, etc
         #heal this tick
         if (self.health < MAXHEALTH):
-            healthbefore = self.health
             self.health = min(self.health + sum(self.healArray[self.tc]), MAXHEALTH)
+            #healthbefore = self.health
             #print("tick",self.tc,"healed",self.health - healthbefore)
         #else:
             #print("tick",self.tc,"healed 0 becuase hp is full at", self.health)
@@ -231,8 +233,10 @@ class Bar():
                                 self.dmgSTotal += avDmg*self.damageInst.caromingDmgMult()*gchainmult
                                 if (ability in self.dmgSecondary[i + self.tc]):
                                     self.dmgSecondary[i + self.tc][ability].append(avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                                    print("added additional damage to secondary targets by",ability.name,"of",avDmg*self.damageInst.caromingDmgMult()*gchainmult)
                                 else:
                                     self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
+                                    print("added additional damage to secondary targets by",ability.name,"of",avDmg*self.damageInst.caromingDmgMult()*gchainmult)
                             #check poison proc, append to self.simAbility
                             if (self.checkPoisonProc(ability) and self.tc + i + 1< self.simt):
                                 #print(ability.name,"at tick",self.tc,"activated poison")
@@ -251,7 +255,7 @@ class Bar():
                         avDmg = self.damageInst.getAvDmg(mini2, maxi2, ability, pOrS, self.berserkUlt)
                         if (avDmg > self.damageCap):#consider damage cap
                             avDmg = self.damageCap
-                        if (ability.name != "Poison"):#dont decrease damage when its poison hit (its a single target damage)
+                        if (ability.name != self.otherAbility.poisonS):#dont decrease damage when its poison hit (its a single target damage)
                             avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
                         
                         if (avDmg > 0):
@@ -362,5 +366,5 @@ class Bar():
     
     def showResutGraph(self):
         #makeGraph.psCompare(self.dmgPrimary,self.dmgSecondary, self.simAbility, self.bar)
-        #makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, self.otherAbs, self.getDpsP())
+        makeGraph.pDetail(self.dmgPrimary, self.simAbility, self.bar, self.otherAbs, self.getDpsP())
         makeGraph.sDetail(self.dmgSecondary, self.simAbility, self.bar, self.otherAbs, self.getDpsS())
