@@ -1,38 +1,66 @@
-import random
+import numpy as np
 from timeConvert import stot
 from playerInfo import *
+import itertools
+from calculator import Damage
+import math
 
 def impatientBonous():
     p = 0.09 * IMPATIENT
-    bonous = 0
     if (IMPATIENTGEARLV == 20):
         p *= 1.1
-    if (random.random() < p):
-        bonous = 3
-    return bonous
+    return round(p * 3*LUCKYNESSMULT, 2)
 
-def relentlessProc():
+def relentlessBonous(cd, change):
     p = 0.01 * RELENTLESS
     if (RELENTLESSGEARLV == 20):
         p *= 1.1
-    if (random.random() < p):
-        return 1
-    else:
-        return 0
+    return round(p * (-1)*change * (cd/RELENTLESSCD) * LUCKYNESSMULT,1)
+
+def ultAdrenBonous():
+    return 10 * (VIGOUR + CONSERVATIONOFENERGY)
 
 class Ability:
     def __init__(self, name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg,icon):
         self.name = name
         self.cd = stot(cd) #tick
-        self.offcd = 0 #tick
         self.dur = stot(dur) #tick
         self.req = req
         self.change = change
         self.bleed = bleed
         self.nAOE = nAOE
-        self.pDmg = pDmg
-        self.sDmg = sDmg
         self.icon = icon
+
+        dmgInst = Damage()
+        self.pDmg = np.array([])
+        self.sDmg = np.array([])
+        self.hitsP = np.array([]) #TODO
+        self.hitsS = np.array([])
+        for hitInTick in pDmg:
+            total  = 0
+            count = 0
+            for hit in hitInTick:
+                dmg = dmgInst.getAvDmg(hit[0], hit[1], self.name, self.bleed)
+                total += dmg
+                if dmg: count += 1
+            self.pDmg = np.append(self.pDmg,total)
+            self.hitsP = np.append(self.hitsP, count)
+        for hitInTick in sDmg:
+            total  = 0
+            count = 0
+            for hit in hitInTick:
+                dmg = dmgInst.getAvDmg(hit[0], hit[1], self.name, self.bleed)
+                total += dmg
+                if dmg: count += 1
+            self.sDmg = np.append(self.sDmg,total)
+            self.hitsS = np.append(self.hitsS, count)
+        self.pDmg = np.round(self.pDmg, decimals=1)
+        self.sDmg = np.round(self.sDmg, decimals=1)
+
+        self.dmgPrimary = self.pDmg.copy()
+        self.dmgSecondary = self.sDmg.copy()
+        
+
 #tc = tick count (basicaly the time)
 #cd = how long you have to wait till you can use the ability again
 #dur = how long the ability lasts untill you can use another
@@ -44,28 +72,37 @@ class Ability:
 class basic(Ability):
     def __init__(self, name, cd = 10, dur = 1.8, req = 0, change = 8, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"): 
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
-        if (self.name == "Chain" or self.name == "Greater Chain" or self.name == "Riccochet" or self.name == "Greater Riccochet"):
+        if self.name == "Chain" or self.name == "Greater Chain" or self.name == "Riccochet" or self.name == "Greater Riccochet":
             self.nAOE = 2 + CAROMING
+        if self.nAOE:
+            self.sDmg *= min(self.nAOE/(AVERAGENENEMIES-1), 1)
+            self.sDmg = np.round(self.sDmg, decimals=1)
+        self.change = change + impatientBonous()
+    
+    #TODO: getAdren() from below and from bar.py
     def getAdren(self, tc, relentlessOffcd):
-        if (FURYOFTHESMALL == 1):
-            return self.change + 1 + impatientBonous()
-        else:
-            return self.change + impatientBonous()
+        return 0
 
 class thresh(Ability):
     def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
+        self.change = change + relentlessBonous(cd,change)
+        if(self.change > 0):
+            self.change = 0
+    #TODO: getAdren() from below and from bar.py
     def getAdren(self, tc, relentlessOffcd):
-        if (tc >= relentlessOffcd and relentlessProc()):
-            return 0
-        else:
-            return self.change
+        return 0
 
 class ult(Ability):
-    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, nAOE = 0, pDmg = [[[0,0]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
+    def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, nAOE = 0, pDmg = [[]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
+        self.change = change + relentlessBonous(cd,change) + ultAdrenBonous()
+        if(self.change > 0):
+            self.change = 0
+
     def getAdren(self, tc, relentlessOffcd):
-        if (tc >= relentlessOffcd and relentlessProc()):
-            return 0
-        else:
-            return self.change
+        return 0
+
+class other(Ability):
+    def __init__(self, name, cd = 0, dur = 10, req = 0, change = 0, bleed = 0, nAOE = 0, pDmg = [[]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"): 
+        super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)

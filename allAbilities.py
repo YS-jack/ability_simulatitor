@@ -24,14 +24,14 @@ class Magic:
         #damage array meaning  [[[min damage, max damage]]  <- damage splat in a single tick]<-ability's damage each tick
         self.asphyx = Ability.thresh(name="Asphyxiate", cd=20, dur = 7*0.6, pDmg=[[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]],[[0,0]],[[37.6,188]]], icon=iLoc+"Asphixiate.png")
         self.deep_impact = Ability.thresh(name="Deep Impact", cd=15, pDmg=[[[0,0]],[[40,200]]], icon=iLoc+"Deep_Impact.png")
-        self.dbreath = Ability.basic(name="Dragon Breath", cd=10, nAOE=4, pDmg=[[[0,0]],[[37,188]]], sDmg=[[[0,0]],[[37,188]]],icon=iLoc+"Dragon_Breath.png")
+        self.dbreath = Ability.basic(name="Dragon Breath", cd=10, nAOE=4, pDmg=[[[0,0]],[[37.6,188]]], sDmg=[[[0,0]],[[37.6,188]]],icon=iLoc+"Dragon_Breath.png")
         self.gchain = Ability.basic(name="Greater Chain", cd=10, nAOE=2, pDmg=[[[0,0]],[[20,100]]], sDmg=[[[0,0]],[[20,100]]],icon=iLoc+"Greater_Chain.png")
         self.chain = Ability.basic(name="Chain", cd=10, nAOE=2, pDmg=[[[0,0]],[[20,100]]], sDmg=[[[0,0]],[[20,100]]])
         self.magma_tempest = Ability.basic(name="Magma Tempest", nAOE=24, cd=15, #check max hit (cant crit, so might not hit 19%?)
                         pDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]]], 
                         sDmg=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]],[[0,0]],[[5,19]]],icon=iLoc+"Magma_Tempest.png")
         self.tsunami = Ability.ult(name="Tsunami", cd=60, req=40, change=-40, nAOE=8, pDmg=[[[0,0]],[[200,300]]], sDmg=[[[0,0]],[[200,300]]],icon=iLoc+"Tsunami.png")
-        self.sunshine = Ability.ult(name="Sunshine", cd=60,icon=iLoc+"Sunshine.png")
+        self.sunshine = Ability.ult(name="Sunshine", cd=60,icon=iLoc+"Sunshine.png", bleed=1)
         #TODO sunishine bleeds
         self.gconc = Ability.basic(name="Greater Concentrated Blast", cd=5, dur=4*0.6, pDmg=[[[0,0]], [[15.8,79]], [[17.8,89]], [[19.8, 99]]],icon=iLoc+"Greater_Conc.png")
         self.wrack = Ability.basic(name="Wrack", cd=3, pDmg=[[[0,0]],[[18.8,94]]],icon=iLoc+"Wrack.png")
@@ -66,7 +66,8 @@ class Const:
         self.sacrifice = Ability.basic(name="Sacrifice", cd=30, pDmg=[[[0,0]],[[20,100]]],icon=iLoc+"Sacrifice.png")
 class OtherAbility:
     def __init__(self):
-        self.noAbility = Ability.basic(name="(no ability available)", cd=0.6, dur = 0.6, change=0, pDmg=[[[0,0]]])
+        self.noAbility = Ability.other(name="(no ability available)", cd=0.6, dur = 0.6, change=0, pDmg=[[[0,0]]])
+        
         poisonLV = WEAPONPOISON + CINDERBANE
         if (poisonLV == 0):
             poisonMin = 0
@@ -74,7 +75,7 @@ class OtherAbility:
         elif(poisonLV > 0):
             poisonMin = 5 + poisonLV*2 + KWUARMINCPOTENCY*2.5 #=25% max +++,cinder
             poisonMax = 18 + poisonLV*6 + KWUARMINCPOTENCY*2.5 #=58% max +++,cinder
-
-        self.poisonP = Ability.basic(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[[poisonMin,poisonMax]]],sDmg=[[]], bleed=1)
-        self.poisonS = Ability.basic(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[]],sDmg=[[[poisonMin,poisonMax]]], bleed=1, nAOE=1)
-        self.bloodReaverPassive = Ability.basic(name="Blood Reaver Passive", cd=0,dur=0,req=0,pDmg=[[[1,1]]])
+        self.poisonP = Ability.other(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[[poisonMin,poisonMax]]],sDmg=[[]], bleed=1)
+        self.poisonS = Ability.other(name="Poison", cd=0,dur=0,req=0,change=0,pDmg=[[]],sDmg=[[[poisonMin,poisonMax]]], bleed=1, nAOE=1)
+        
+        self.bloodReaverPassive = Ability.other(name="Blood Reaver Passive", cd=0,dur=0,req=0,pDmg=[[[1,1]]])

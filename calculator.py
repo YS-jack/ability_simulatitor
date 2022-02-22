@@ -76,35 +76,29 @@ class Damage():
             return FALSE
     def getPrayerBoost(self):
         return 1 + PRAYERBOOST
-    def getOtherBoost(self, berserkUlt):
+    def getOtherBoost(self):
         mult = (1 + RIPPERDEMON*0.025) * (1 + RUTHELESS*0.005*RUTHELESSSTACK) * (1 + MOBSALYER*0.07) * OTHERDMGMULTIPLIER
         if (not DUALWIELD and INQUISITOR):
             mult *= 1.125
-        if (berserkUlt == BERSERK):
-            mult *= 2
-        elif (berserkUlt == SUNSHINE or berserkUlt == DEATHSSWIFTNESS):
-            mult *= 1.5
-        elif (berserkUlt == NOBERSERK):
-            mult *= 1 + BERSERKAURA*0.1
         return mult
     def bleedBoost(self):#TODO add more boosts that affect bleeds
         mult = 1
         if (not DUALWIELD and INQUISITOR):
             mult *= 1.125
         return mult
-    def getAvDmg(self, min, max, ability, pOrS, berserkUlt):
+    def getAvDmg(self, min, max, name, bleed = 0):
         if(max == 0):
-            #print("max hit of",ability.name,"was 0, so average damage = 0")
+            #print("max hit of",name,"was 0, so average damage = 0")
             return 0
         else:
-            if (ability.name == "Dismember" or ability.name == "Combust" or ability.name == "Fragmentation Shot"):
+            if (name == "Dismember" or name == "Combust" or name == "Fragmentation Shot"):
                 max += LUNGING * 4
                 ave = self.round(min*min/max + (max-min)*(max+min)/(max*2))
                 return ave *0.01* self.abilityDmg * self.bleedBoost()
-            elif(ability.name == "Poison"):
+            elif(name == "Poison"):
                 ave = (min + max) / 2
                 return ave *0.01* self.abilityDmg
-            elif (ability.bleed == 1):
+            elif (bleed == 1):
                 ave = (min + max) / 2
                 ave = self.round(ave) 
                 return ave *0.01* self.abilityDmg * self.bleedBoost()
@@ -136,7 +130,7 @@ class Damage():
                 #prayer boost, other boost
                 prayerMult = self.getPrayerBoost()
                 #print("prayermult = ",prayerMult)
-                otherMult = self.getOtherBoost(berserkUlt)
+                otherMult = self.getOtherBoost()
                 #print("other mult =",otherMult)
                 ave = ave * prayerMult * otherMult
                 self.aveDmg = self.round(ave) * 0.01 * self.abilityDmg + avepot * otherMult

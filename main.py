@@ -1,32 +1,43 @@
-from bar import Bar
-from allAbilities import *
-from Optimise import Optimizer
+
+
+
 if __name__ == "__main__":
-    attack = Attack()
-    strength = Strength()
-    magic = Magic()
-    range = Range()
-    defence = Defence()
-    const = Const()
+    from bar import Bar
+    from allAbilities import *
+    from Optimise import Optimizer
+
+    import cProfile
+    import pstats
+    from datetime import datetime    
     bar = Bar()
-    bar.atk = attack
-    bar.str = strength
-    bar.magic = magic
-    bar.range = range
-    bar.defence = defence
-    bar.const = const
 
     #simulate 1 bar (bar.bar)
-    bar.bar = [magic.sunshine, magic.gchain,magic.dbreath,magic.tsunami,
-    magic.wild_magic,magic.corruption_blast,magic.deep_impact,magic.magma_tempest,
-    magic.sonic_wave,defence.devotion, const.tuska, magic.combust]
-    bar.simulate()
-    bar.printSimulationResult()
-    bar.showResutGraph()
+    bar.bar = [bar.magic.sunshine, bar.magic.gchain, bar.magic.dbreath, bar.magic.tsunami,
+    bar.magic.wild_magic, bar.magic.corruption_blast, bar.magic.deep_impact, bar.magic.magma_tempest,
+    bar.magic.sonic_wave, bar.defence.devotion, bar.magic.combust, bar.magic.omnipower_igneous]
+
+    with cProfile.Profile() as pr:
+        bar.simulate()
+    stats = pstats.Stats(pr)
+    stats.sort_stats(pstats.SortKey.TIME)
+    now = datetime.now()
+    filestring = "./profiles/" + now.strftime("%y-%m-%d  %H_%M ") + "12 abilities simulation"
+    #stats.dump_stats(filename=filestring)
+
+    #bar.printSimulationResult()
+    #bar.showResutGraph()#"""
+
+
 
     #get optimal bar using abilities in pool[]
-    """pool = [magic.corruption_blast,magic.dbreath,magic.sonic_wave, magic.gchain, magic.magma_tempest, const.tuska, magic.wrack] 
-    #magic.wild_magic, magic.deep_impact, magic.omnipower_igneous, magic.tsunami, magic.sunshine
+    #pool = [bar.magic.sunshine, bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.sonic_wave, bar.magic.gchain, bar.magic.magma_tempest, const.tuska, bar.magic.wild_magic, bar.magic.deep_impact, bar.magic.omnipower_igneous, bar.magic.tsunami] 
+    """pool = [bar.magic.sunshine, bar.magic.sonic_wave, bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.gchain,
+    bar.magic.magma_tempest, bar.const.tuska, bar.magic.wild_magic, bar.magic.deep_impact, bar.magic.tsunami] 
+    
+    # ,bar.const.sacrifice, bar.magic.omnipower_igneous
 
     optimizer = Optimizer()
-    optimizer.findTopAOE(pool, 5) #get top n bars"""
+    optimizer.findTopAOE(bar, pool, 50) #get top n bars"""
+
+
+    

@@ -1,0 +1,6 @@
+[Sunshine, Corruption Blast, Sonic Wave, ]	expected primary dps =485, secondary dps =361
+
+[Corruption Blast, Sunshine, Sonic Wave, ]	expected primary dps =485, secondary dps =361
+
+[Corruption Blast, Sonic Wave, Sunshine, ]	expected primary dps =486, secondary dps =361
+

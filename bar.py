@@ -1,14 +1,13 @@
 import math
 import random
-from pickle import TRUE
-from xml.dom.minidom import Notation
 from allAbilities import *
 from timeConvert import stot, ttos
 from playerInfo import *
 import calculator
 from drawGraph import makeGraph
 from enemy import Enemy
-SIMULATIONTIME = 60 # seconds
+import numpy as np
+SIMULATIONTIME = 60*5 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -19,31 +18,24 @@ class Bar():
         self.defence = Defence()
         self.const = Const()
         self.otherAbility = OtherAbility()
-        self.otherAbs = [#abilities that dont use gchain buff, not displayed in result graph x axis icon TODO add aftershock and cannon, puncture, blood reaver .. here
-            self.otherAbility.poisonP,self.otherAbility.poisonS,self.otherAbility.noAbility, self.otherAbility.bloodReaverPassive] 
+        #abilities that dont use gchain buff, not displayed in result graph x axis icon TODO add aftershock and cannon, puncture, blood reaver .. in self.otherAbs
+        self.otherAbs = [self.otherAbility.poisonP,self.otherAbility.poisonS,self.otherAbility.noAbility, self.otherAbility.bloodReaverPassive]
+
         self.otherCanHeal = [] #abilities in self.othersAbs but can heal from soulsplit, vamp e.g. reflect damage, cannon(?) wen,jas book(?)
-        """self.bar = [self.magic.sunshine, self.magic.gchain,self.magic.dbreath,self.magic.tsunami, self.magic.wild_magic, 
-        self.magic.sonic_wave, self.magic.corruption_blast, self.magic.magma_tempest, self.magic.deep_impact, 
-        self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.omnipower_igneous]"""
-        """self.bar = [self.magic.wild_magic,self.magic.gchain,self.magic.sunshine, self.magic.tsunami,self.magic.dbreath,
-        self.magic.corruption_blast,self.magic.deep_impact,self.magic.magma_tempest,
-        self.magic.sonic_wave,self.defence.devotion, self.const.tuska, self.magic.combust, self.const.sacrifice, self.magic.wrack]"""
         self.bar =[]
         
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
         self.tc = 0
-        self.abilityCd = 0
-        self.adren = [0]*self.simt
-        self.adren[0] = INITADREN
+        self.adrenNow = 0
+        self.adrenPrev = INITADREN
         self.simAbility = [] #[[ability, ability (activated in same tick, like poison, aftershock, puncture, ...)],[],[],...]       
         self.dmgPrimary = [] #[{"ability1":damage, "ability2":damage,...},{},...]
         self.dmgSecondary = []
-        self.healArray = []
+        self.healArray = np.zeros(self.simt)
         for i in range(self.simt):
             self.simAbility.append([])
             self.dmgPrimary.append({})
             self.dmgSecondary.append({})
-            self.healArray.append([])
         
         self.relentlessOffcd = 0
         self.dmgPTotal = 0
@@ -56,7 +48,7 @@ class Bar():
         self.gchainOfftc = 0 #tc of until when gchain effect is active
 
         self.damageCap = 12000
-        if (GRIMOIRE):
+        if GRIMOIRE:
             self.damageCap = 15000
         self.health = MAXHEALTH
         self.enemy = Enemy()
@@ -64,36 +56,200 @@ class Bar():
         self.poisonProcAttempts = 0
         self.totalDmgNoPoisonP = 0
         self.totalDmgNoPoisonS = 0
+
+    def initArrays(self):
+        y = len(self.bar) + len(self.otherAbs)
+        self.dmgP = np.zeros((self.simt, y))
+        self.dmgS = np.zeros((self.simt, y))
+        self.hitsP = np.zeros((self.simt, y))
+        self.hitsS = np.zeros((self.simt, y))
+        self.abilityOffCd = np.zeros(len(self.bar))
         
-    def printBarInfo(self):
-        for b in self.bar:
-            print(self.bar.index(b), b.name,":")
-            print("\tcd =", b.cd)
-            print("\tduration =", b.dur)
-            print("\trequired adrenaline =", b.req)
-            print("\tadrenaline change =", b.change)
+        self.abilityCd = np.array([])
+        self.berserkMult = np.array([])
+        for ability in self.bar:
+            self.abilityCd = np.concatenate((self.abilityCd,[ability.cd]))
+            if ability.bleed or type(ability) == OtherAbility:
+                self.berserkMult = np.concatenate((self.berserkMult,[0]))
+            else:
+                self.berserkMult = np.concatenate((self.berserkMult,[1]))
+        self.abilityCd = np.concatenate((self.abilityCd,np.zeros(len(self.otherAbs))))
+        self.berserkMult = np.concatenate((self.berserkMult,np.zeros(len(self.otherAbs))))
+        if STYLE == STYLERANGED or STYLE == STYLEMAGIC:
+            self.berserkMult *= 0.5
+        self.berserkMult += np.ones(y)
+        
+        for i,ability in enumerate(self.bar + self.otherAbs):
+            if i == 0:
+                bottomA = np.zeros((y-1,ability.dmgPrimary.shape[0]))
+                ability.dmgPrimary = np.vstack((ability.dmgPrimary,bottomA))
+
+                bottomA = np.zeros((y-1,ability.dmgSecondary.shape[0]))
+                ability.dmgSecondary = np.vstack((ability.dmgSecondary,bottomA))
+
+                bottomA = np.zeros((y-1,ability.hitsP.shape[0]))
+                ability.hitsP = np.vstack((ability.hitsP,bottomA))
+
+                bottomA = np.zeros((y-1,ability.hitsS.shape[0]))
+                ability.hitsS = np.vstack((ability.hitsS,bottomA))
+            if 0 < i and i < y - 1:
+                topA = np.zeros((i,ability.dmgPrimary.shape[0]))
+                bottomA = np.zeros((y-i-1,ability.dmgPrimary.shape[0]))
+                ability.dmgPrimary = np.vstack((topA,ability.dmgPrimary,bottomA))
+                
+                topA = np.zeros((i,ability.dmgSecondary.shape[0]))
+                bottomA = np.zeros((y-i-1,ability.dmgSecondary.shape[0]))
+                ability.dmgSecondary = np.vstack((topA,ability.dmgSecondary,bottomA))
+
+                topA = np.zeros((i,ability.hitsP.shape[0]))
+                bottomA = np.zeros((y-i-1,ability.hitsP.shape[0]))
+                ability.hitsP = np.vstack((topA,ability.hitsP,bottomA))
+
+                topA = np.zeros((i,ability.hitsS.shape[0]))
+                bottomA = np.zeros((y-i-1,ability.hitsS.shape[0]))
+                ability.hitsS = np.vstack((topA,ability.hitsS,bottomA))
+            if i == y - 1:
+                topA = np.zeros((i,ability.dmgPrimary.shape[0]))
+                ability.dmgPrimary = np.vstack((topA,ability.dmgPrimary))
+
+                topA = np.zeros((i,ability.dmgSecondary.shape[0]))
+                ability.dmgSecondary = np.vstack((topA,ability.dmgSecondary))
+
+                topA = np.zeros((i,ability.hitsP.shape[0]))
+                ability.hitsP = np.vstack((topA,ability.hitsP))
+
+                topA = np.zeros((i,ability.hitsS.shape[0]))
+                ability.hitsS = np.vstack((topA,ability.hitsS))
+            print(f'{ability.name}.hitsP shape = {ability.hitsP.shape} = \n{ability.hitsP}')
+
+    def takeDamage(self):
+        damage = self.enemy.getAttack(self.tc)
+        self.health -= damage
+        #if(self.health<0):
+            #print("you died at tick",self.tc)
+
     def flagBerserk(self, ability):
-        if (ability == self.str.berserk):
+        if (ability.name == self.str.berserk.name):
             self.berserkUlt = BERSERK
             self.berserkOfftc = self.tc + BERSERKDUR
-        elif (ability == self.magic.sunshine):
+        elif (ability.name == self.magic.sunshine.name):
             self.berserkUlt = SUNSHINE
             self.berserkOfftc = self.tc + SUNSHINEDUR
-        elif (ability == self.range.death_swift):
+        elif (ability.name == self.range.death_swift.name):
             self.berserkUlt = DEATHSSWIFTNESS
             self.berserkOfftc = self.tc + DEATHSWIFTNESSDUR
-    def checkBerserk(self):
-        if (self.berserkOfftc <= self.tc and self.berserkUlt != NOBERSERK):#turn of beserk mode if past offtc
-            self.berserkUlt = NOBERSERK
     def flagGchain(self, ability):
-        if (ability == self.magic.gchain):
+        if (ability.name == self.magic.gchain.name):
             self.gchainBuff = ACTIVE
             self.gchainOfftc = self.tc + GCHAINBUFFDUR
+    def getNextAbility(self):
+        for i, ability in enumerate(self.bar):
+            #print(f'next ability is {ability.name}')
+            if (self.abilityOffCd.item(i) <= 0): #if ability i is available
+                self.abilityOffCd[i:i+1] += self.abilityCd[i] #set ability's + ability.cd
+                self.flagBerserk(ability)#flag self.berserkUlt if ability is berserk variant
+                self.flagGchain(ability) #flag self.gchainBuff if ability is gchain
+                return ability
+        return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
+
+    def fillHits(self, pOrS, ability):#fill dmgPrimary and dmgSecondary caused by "ability" input, including hits > self.tc, 
+        if (ability.name == self.otherAbility.noAbility):
+            print(f'fillHits: no ability was available at {self.tc}')
+            return 0
+        self.checkBerserk()
+        if (pOrS == "p"):
+            #self.pDmg += np.pad(ability.pDmg,)
+            """if(ability != self.magic.corruption_blast):#for gchain maths
+                gchainmult = self.checkGchain(ability)
+            for i in range(len(ability.pDmg)):#for every tick ability lasts for
+                if (i + self.tc >= self.simt):
+                    break
+                tickHits = ability.pDmg[i] #tickHits is list of damage done by 1 ability in 1 tick (e.g. omnipower 2nd-4th hits)
+                for j in range(len(tickHits)):#for every hits ability does in a tick
+                    mini = ability.pDmg[i][j][0]
+                    maxi = ability.pDmg[i][j][1]
+                    avDmg = self.damageInst.getAvDmg(mini, maxi, ability, pOrS, self.berserkUlt) #get average damage of 1 hit of tickHits
+                    if (avDmg > self.damageCap):#consider damage cap
+                        avDmg = self.damageCap
+                    #print("tick",self.tc,"damage from",ability.name,"'s",i,"th hit at tick",self.tc+i," =",avDmg)
+                    
+                    if (avDmg > 0):
+                        self.dmgPTotal += avDmg #add to damage count
+                        if (ability != self.otherAbility.poisonP):
+                            self.totalDmgNoPoisonP += avDmg
+                        if (ability in self.dmgPrimary[i + self.tc]):#if ability is already listed in dmgPrimary at same tick
+                            self.dmgPrimary[i + self.tc][ability].append(avDmg) #append
+                        else: #other wise
+                            self.dmgPrimary[i + self.tc][ability] = [avDmg] #make new dictionary index
+                        #process for gchain damage caluclation on secondary targets
+                        if (ability == self.magic.corruption_blast):
+                            gchainmult = self.checkGchain(ability)
+                        if (gchainmult):#add damage to secondary targets if gchain buff is active
+                            self.totalDmgNoPoisonS += avDmg*self.damageInst.caromingDmgMult()*gchainmult
+                            self.dmgSTotal += avDmg*self.damageInst.caromingDmgMult()*gchainmult
+                            if (ability in self.dmgSecondary[i + self.tc]):
+                                self.dmgSecondary[i + self.tc][ability].append(avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                                #print("added additional damage to secondary targets by",ability.name,"of",avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                            else:
+                                self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
+                                #print("added additional damage to secondary targets by",ability.name,"of",avDmg*self.damageInst.caromingDmgMult()*gchainmult)
+                        #check poison proc, append to self.simAbility
+                        if (self.checkPoisonProc(ability) and self.tc + i + 1< self.simt):
+                            #print(ability.name,"at tick",self.tc,"activated poison")
+                            self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonP)
+                        #add healing to self.healArray[]
+                        self.addHealArray(avDmg ,ability, i)"""
+
+        elif(pOrS == "s"):
+            for i in range(len(ability.sDmg)):
+                if (i + self.tc >= self.simt):
+                    break
+                tickHits = ability.sDmg[i]
+                for j in range(len(tickHits)):
+                    mini2 = ability.sDmg[i][j][0]
+                    maxi2 = ability.sDmg[i][j][1]
+                    avDmg = self.damageInst.getAvDmg(mini2, maxi2, ability, pOrS, self.berserkUlt)
+                    if (avDmg > self.damageCap):#consider damage cap
+                        avDmg = self.damageCap
+                    if (ability.name != self.otherAbility.poisonS):#dont decrease damage when its poison hit (its a single target damage)
+                        avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
+                    
+                    if (avDmg > 0):
+                        self.dmgSTotal += avDmg
+                        if (ability != self.otherAbility.poisonS):
+                            self.totalDmgNoPoisonS += avDmg
+                        if (ability in self.dmgSecondary[i + self.tc]):
+                            self.dmgSecondary[i + self.tc][ability].append(avDmg)
+                        else:
+                            self.dmgSecondary[i + self.tc][ability] = [avDmg]
+                        #check poison proc, add to simAbility[self.tc + 1]
+                        if (self.checkPoisonProc(ability) and self.tc + i + 1 < self.simt):
+                            #print(ability.name,"at tick",self.tc,"activated poison")
+                            self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonS)
+                        #add healing to self.healArray[], add damage of bloodreaver to later tick, * number of enemies or nAOE
+                        for k in range(min(ability.nAOE,math.floor(AVERAGENENEMIES - 1))):
+                            self.addHealArray(avDmg, ability, i)
+
+    def simulate(self):
+        self.initArrays()
+        while self.tc < self.simt:
+            self.takeDamage()
+            nextAbility = self.getNextAbility() #returns ability
+            self.fillHits("p", nextAbility) #fill dmgP, addHealArray()
+            self.fillHits("s", nextAbility) #fill dmgS, addHealArray()
+            self.heal()#heal
+            self.addReaverDmg()# apply damage of blood reaver passive
+            self.renewAdren(nextAbility) #calc adren, edit adren[]
+            self.tc += 1
+    
+
+    def checkBerserk(self):
+        if (self.berserkOfftc <= self.tc and self.berserkUlt != NOBERSERK):#turn off beserk mode if past offtc
+            self.berserkUlt = NOBERSERK
+    
     def checkGchain(self, ability):
         notApplicableToGchain = [self.magic.magma_tempest, self.magic.gchain] + self.otherAbs
-        print("self.gchainOfftc =",self.gchainOfftc,", self.tc =",self.tc)
         if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability not in notApplicableToGchain):#if not used yet
-            print("gchain buff activated for",ability.name)
             self.gchainOfftc = 0
             self.gchainBuff = NOTACTIVE
             if (ability == self.magic.corruption_blast):
@@ -165,133 +321,28 @@ class Bar():
             self.poisonProcAttempts += 1
         if (random.random() < p):
             return ACTIVE
-    def takeDamage(self):
-        damage = self.enemy.getAttack(self.tc)
-        self.health -= damage
-        #if(self.health<0):
-            #print("you died at tick",self.tc)
-    def getNextAbility(self):
-            if (self.tc == 0):
-                currentAdren = INITADREN
-            else:
-                currentAdren = self.adren[self.tc - 1]
-            if (self.abilityCd > self.tc): #during gcd or still doing channeled
-                #print("in getNextAbility: no ability returned becuase self.abilityCd >", self.tc)
-                return self.otherAbility.noAbility
-            for ability in self.bar:
-                #print("in getNextAbility:", ability.name, "offcd =",ability.offcd,", tick =",self.tc,", currnetAdren =",currentAdren,", requried adren =",ability.req)
-                if (self.tc >= ability.offcd and currentAdren >= ability.req):
-                    self.flagBerserk(ability)#flag self.berserkUlt if ability is berserk variant
-                    self.flagGchain(ability) #flag self.gchainBuff if ability is gchain
-                    #print("in getNextAbility: returned", ability.name,"tick:",self.tc)
-                    return ability
-            #print("no ability was available at tick",self.tc,"for bar ",end="")
-            #print("[",end="")
-            #for ability in self.bar:
-            #    print(ability.name,end=", ")
-            #print("]")
-            #print("in getNextAbility: no ability was available at tick",self.tc)
-            return self.otherAbility.noAbility #when no ability is available. TODO: replace with auto attack if its not on cd
-    def addSimAbility(self, ability):
-        if (len(self.simAbility[self.tc]) < self.simt and ability != self.otherAbility.noAbility):
-            self.simAbility[self.tc].insert(0,ability)
 
-    def fillHits(self, pOrS):#fill hitP and hitS caused by "ability" input, including hits > self.tc, 
-        if (len(self.simAbility[self.tc]) == 0):
-            #print("fillHits: no ability was in self.simAbility[",self.tc,"]")
-            return 0
-        for ability in self.simAbility[self.tc]:
-            self.checkBerserk()
-            if (pOrS == "p"):
-                if(ability != self.magic.corruption_blast):#for gchain maths
-                    gchainmult = self.checkGchain(ability)
-                for i in range(len(ability.pDmg)):#for every tick ability lasts for
-                    if (i + self.tc >= self.simt):
-                        break
-                    tickHits = ability.pDmg[i] #tickHits is list of damage done by 1 ability in 1 tick (e.g. omnipower 2nd-4th hits)
-                    for j in range(len(tickHits)):#for every hits ability does in a tick
-                        mini = ability.pDmg[i][j][0]
-                        maxi = ability.pDmg[i][j][1]
-                        avDmg = self.damageInst.getAvDmg(mini, maxi, ability, pOrS, self.berserkUlt) #get average damage of 1 hit of tickHits
-                        if (avDmg > self.damageCap):#consider damage cap
-                            avDmg = self.damageCap
-                        #print("tick",self.tc,"damage from",ability.name,"'s",i,"th hit at tick",self.tc+i," =",avDmg)
-                        
-                        if (avDmg > 0):
-                            self.dmgPTotal += avDmg #add to damage count
-                            if (ability != self.otherAbility.poisonP):
-                                self.totalDmgNoPoisonP += avDmg
-                            if (ability in self.dmgPrimary[i + self.tc]):#if ability is already listed in dmgPrimary at same tick
-                                self.dmgPrimary[i + self.tc][ability].append(avDmg) #append
-                            else: #other wise
-                                self.dmgPrimary[i + self.tc][ability] = [avDmg] #make new dictionary index
-                            #process for gchain damage caluclation on secondary targets
-                            if (ability == self.magic.corruption_blast):
-                                gchainmult = self.checkGchain(ability)
-                            if (gchainmult):#add damage to secondary targets if gchain buff is active
-                                self.totalDmgNoPoisonS += avDmg*self.damageInst.caromingDmgMult()*gchainmult
-                                self.dmgSTotal += avDmg*self.damageInst.caromingDmgMult()*gchainmult
-                                if (ability in self.dmgSecondary[i + self.tc]):
-                                    self.dmgSecondary[i + self.tc][ability].append(avDmg*self.damageInst.caromingDmgMult()*gchainmult)
-                                    print("added additional damage to secondary targets by",ability.name,"of",avDmg*self.damageInst.caromingDmgMult()*gchainmult)
-                                else:
-                                    self.dmgSecondary[i + self.tc][ability] = [avDmg*self.damageInst.caromingDmgMult()*gchainmult]
-                                    print("added additional damage to secondary targets by",ability.name,"of",avDmg*self.damageInst.caromingDmgMult()*gchainmult)
-                            #check poison proc, append to self.simAbility
-                            if (self.checkPoisonProc(ability) and self.tc + i + 1< self.simt):
-                                #print(ability.name,"at tick",self.tc,"activated poison")
-                                self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonP)
-                            #add healing to self.healArray[]
-                            self.addHealArray(avDmg ,ability, i)
-
-            elif(pOrS == "s"):
-                for i in range(len(ability.sDmg)):
-                    if (i + self.tc >= self.simt):
-                        break
-                    tickHits = ability.sDmg[i]
-                    for j in range(len(tickHits)):
-                        mini2 = ability.sDmg[i][j][0]
-                        maxi2 = ability.sDmg[i][j][1]
-                        avDmg = self.damageInst.getAvDmg(mini2, maxi2, ability, pOrS, self.berserkUlt)
-                        if (avDmg > self.damageCap):#consider damage cap
-                            avDmg = self.damageCap
-                        if (ability.name != self.otherAbility.poisonS):#dont decrease damage when its poison hit (its a single target damage)
-                            avDmg *= self.damageInst.aoeDmgMult(ability.nAOE)
-                        
-                        if (avDmg > 0):
-                            self.dmgSTotal += avDmg
-                            if (ability != self.otherAbility.poisonS):
-                                self.totalDmgNoPoisonS += avDmg
-                            if (ability in self.dmgSecondary[i + self.tc]):
-                                self.dmgSecondary[i + self.tc][ability].append(avDmg)
-                            else:
-                                self.dmgSecondary[i + self.tc][ability] = [avDmg]
-                            #check poison proc, add to simAbility[self.tc + 1]
-                            if (self.checkPoisonProc(ability) and self.tc + i + 1 < self.simt):
-                                #print(ability.name,"at tick",self.tc,"activated poison")
-                                self.simAbility[self.tc + i + 1].append(self.otherAbility.poisonS)
-                            #add healing to self.healArray[], add damage of bloodreaver to later tick, * number of enemies or nAOE
-                            for k in range(min(ability.nAOE,math.floor(AVERAGENENEMIES - 1))):
-                                self.addHealArray(avDmg, ability, i)
+    
 
     def renewAdren(self, ability):
         if (ability != self.otherAbility.noAbility and ability != self.otherAbility.poisonP and ability != self.otherAbility.poisonS):#dont add nor subtract adren if ability = noAbility or poison
             abilityAdrenGain = ability.getAdren(self.tc, self.relentlessOffcd)
-            if (abilityAdrenGain == 0):#set relentless on cooldown
-                self.relentlessOffcd = self.tc + stot(RELENTLESSCD)
             if (self.tc == 0):
-                self.adren[self.tc] += abilityAdrenGain
+                self.adren[0] += abilityAdrenGain
             else:
-                self.adren[self.tc] = self.adren[self.tc - 1] + abilityAdrenGain
-            if (self.adren[self.tc] >= 100 + HEIGHTENEDSENSES * 10):
+                self.adren[self.tc] = self.adren[self.tc - 1] + abilityAdrenGain #set adren of next tick
+            if (self.adren[self.tc] > 100 + HEIGHTENEDSENSES * 10): #set to max adren if it was set to over max
                 self.adren[self.tc] = 100 + HEIGHTENEDSENSES * 10
-            for t in range(self.tc + 1, self.tc + ability.dur):
+            """for t in range(self.tc + 2, self.tc + ability.dur):
                 if (t < self.simt):
                     self.adren[t] += self.adren[t-1]
                     #if (self.adren[t] < 0):
                         #print("adrenaline below 0 after using",ability.name)
                     if (self.adren[t] >= 100 + HEIGHTENEDSENSES * 10):
-                        self.adren[t] = 100 + HEIGHTENEDSENSES * 10
+                        self.adren[t] = 100 + HEIGHTENEDSENSES * 10"""
+        elif(self.tc > 0):
+            self.adren[self.tc] = self.adren[self.tc - 1]
+        
     def setcd(self, ability):
         if (ability != self.otherAbility.noAbility):
             ability.offcd = self.tc + ability.cd
@@ -302,26 +353,7 @@ class Bar():
                 for j in range(len(dmgPS[i][index])):
                     dmgPS[i][index][j] = math.floor(dmgPS[i][index][j])
 
-    def simulate(self):
-        """print("start simulation of bar :",end="")
-        for ab in self.bar:
-            print(ab.name,end=", ")
-        print()"""
-        while self.tc < self.simt:
-            self.takeDamage()
-            nextAbility = self.getNextAbility() #check what ability would be used at tick self.tc, type(nextAbility) same as type(self.bar[i])
-            self.addSimAbility(nextAbility) #edit simAbility
-            #print("filling primary hits")
-            self.fillHits("p") #fill dmgPriamry[{}], addHealArray()
-            #print("filling secondary hits")
-            self.fillHits("s") #dmgSecondary[{}], addHealArray()
-            self.heal()#heal
-            self.addReaverDmg()# apply damage of blood reaver passive
-            self.renewAdren(nextAbility) #calc adren, edit adren[]
-            self.setcd(nextAbility)
-            self.tc += 1
-        self.roundDownHits(self.dmgPrimary)
-        self.roundDownHits(self.dmgSecondary)
+    
 
     def printSimulationResult(self):
         print("simulation time\t=", ttos(self.simt),"seconds")
@@ -340,7 +372,7 @@ class Bar():
         for ability in self.bar:
             print(ability.name,end=", ")
         print("]",end="\n\n\n\n\n")
-        """for i in range(self.simt):
+        for i in range(self.simt):
             print("tick", i, end=", ")
             print("Primary damage : ",end="")
             for hitAbility in self.dmgPrimary[i]:
@@ -353,7 +385,7 @@ class Bar():
             else:
                 print("adren =", self.adren[i])
             for j in range(len(self.simAbility[i])):
-                print("ability activated:", self.simAbility[i][j].name,"at tick",i)"""
+                print("ability activated:", self.simAbility[i][j].name,"at tick",i)
     def getDpsP(self):
         return math.floor(self.dmgPTotal/ttos(self.simt))
     def getDpsS(self):
