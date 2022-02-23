@@ -1,6 +1,3 @@
-
-
-
 if __name__ == "__main__":
     from bar import Bar
     from allAbilities import *
@@ -12,7 +9,7 @@ if __name__ == "__main__":
     bar = Bar()
 
     #simulate 1 bar (bar.bar)
-    bar.bar = [bar.magic.sunshine, bar.magic.gchain, bar.magic.dbreath, bar.magic.tsunami,
+    bar.bar = [bar.magic.gchain, bar.magic.sunshine,  bar.magic.dbreath, bar.magic.tsunami,
     bar.magic.wild_magic, bar.magic.corruption_blast, bar.magic.deep_impact, bar.magic.magma_tempest,
     bar.magic.sonic_wave, bar.defence.devotion, bar.magic.combust, bar.magic.omnipower_igneous]
 
@@ -25,7 +22,8 @@ if __name__ == "__main__":
     #stats.dump_stats(filename=filestring)
 
     #bar.printSimulationResult()
-    #bar.showResutGraph()#"""
+    bar.setDmgDitc()
+    bar.showResutGraph()#"""
 
 
 

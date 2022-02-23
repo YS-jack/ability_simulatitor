@@ -34,7 +34,7 @@ class Ability:
         dmgInst = Damage()
         self.pDmg = np.array([])
         self.sDmg = np.array([])
-        self.hitsP = np.array([]) #TODO
+        self.hitsP = np.array([]) #hits against 1 enemy
         self.hitsS = np.array([])
         for hitInTick in pDmg:
             total  = 0
@@ -77,31 +77,23 @@ class basic(Ability):
         if self.nAOE:
             self.sDmg *= min(self.nAOE/(AVERAGENENEMIES-1), 1)
             self.sDmg = np.round(self.sDmg, decimals=1)
-        self.change = change + impatientBonous()
+        self.change = round(change + impatientBonous(),1)
     
-    #TODO: getAdren() from below and from bar.py
-    def getAdren(self, tc, relentlessOffcd):
-        return 0
+
 
 class thresh(Ability):
     def __init__(self, name, cd = 20, dur = 1.8, req = 50, change = -15, bleed = 0, nAOE = 0, pDmg = [[[20,100]]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
-        self.change = change + relentlessBonous(cd,change)
+        self.change = round(change + relentlessBonous(cd,change),1)
         if(self.change > 0):
             self.change = 0
-    #TODO: getAdren() from below and from bar.py
-    def getAdren(self, tc, relentlessOffcd):
-        return 0
 
 class ult(Ability):
     def __init__(self, name, cd = 60, dur = 1.8, req = 100, change = -100, bleed = 0, nAOE = 0, pDmg = [[]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"):
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
-        self.change = change + relentlessBonous(cd,change) + ultAdrenBonous()
+        self.change = round(change + relentlessBonous(cd,change) + ultAdrenBonous(),1)
         if(self.change > 0):
             self.change = 0
-
-    def getAdren(self, tc, relentlessOffcd):
-        return 0
 
 class other(Ability):
     def __init__(self, name, cd = 0, dur = 10, req = 0, change = 0, bleed = 0, nAOE = 0, pDmg = [[]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"): 

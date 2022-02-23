@@ -1,26 +1,22 @@
 from tkinter.tix import IMAGE
 from unicodedata import name
 import plotly.graph_objects as go
-import plotly.express as px
 from PIL import Image
 from allAbilities import OtherAbility
 
 class makeGraph():
     def psCompare(dmgP,dmgS, abilityOrder, bar):
         x = list(range(len(dmgP)))
-        yP = []
-        for hitsInTick in dmgP:
-            dmgInTick = 0
-            for abiIndex in hitsInTick:
-                dmgInTick += sum(hitsInTick[abiIndex])
-            yP.append(dmgInTick)
-        yS = []
-        for hitsInTick in dmgS:
-            dmgInTick = 0
-            for abiIndex in hitsInTick:
-                dmgInTick += sum(hitsInTick[abiIndex])
-            yS.append(dmgInTick)
-        
+        yP, yS = [], []
+        for hitsInTickP, hitsInTickS in zip(dmgP, dmgS):
+            dmgInTickP = 0
+            dmgInTickS = 0
+            for abiIndexP, abiIndexS in zip(hitsInTickP, hitsInTickS):
+                dmgInTickP += hitsInTickP[abiIndexP]
+                dmgInTickS += hitsInTickS[abiIndexS]
+            yP.append(dmgInTickP)
+            yS.append(dmgInTickS)
+                
         fig = go.Figure(data=[go.Bar(
             name = "Primary target",
             x = x,
@@ -36,16 +32,14 @@ class makeGraph():
         fig.update_xaxes(title_text='Tick and Used Abilities', title_font = {"size": 20})
         fig.update_yaxes(title_text='Damage on Primary & Secondary targets', title_font = {"size": 20})
 
-        for tc in range(len(abilityOrder)): #abilities used in order
-            if (len(abilityOrder[tc])==0):
+        for tc, ability in enumerate(abilityOrder): #add used abilities under x axis
+            if type(ability) == OtherAbility:
                 continue
-            if(abilityOrder[tc][0].name == "Poison"):
-                continue
-            if (tc >= 1):
-                if (len(abilityOrder[tc-1])!=0):
-                    if (abilityOrder[tc][0] == abilityOrder[tc - 1][0]):
+            if tc >= 1:
+                if type(abilityOrder[tc-1]) != OtherAbility:
+                    if ability == abilityOrder[tc - 1]:
                         continue
-            source = Image.open(abilityOrder[tc][0].icon)
+            source = Image.open(ability.icon)
             fig.add_layout_image(
                 source=source,
                 xref="x",
@@ -87,39 +81,34 @@ class makeGraph():
 
     def pDetail(dmgP, abilityOrder, bar, otherAbList, dps):
         x = list(range(len(dmgP)))
-        abilityDmgData = {}
         barAndOtherAb = bar + otherAbList
+        abilityData = []
         for ability in barAndOtherAb:
-            abilityDmgData[ability] = []
-            for hitsInTickDict in dmgP:
-                if (ability in hitsInTickDict):
-                    abilityDmgData[ability].append(sum(hitsInTickDict[ability]))
+            abdmg = []
+            sum = 0
+            for dictTick in dmgP:
+                if ability.name in dictTick:
+                    sum += dictTick[ability.name]
+                    abdmg.append(dictTick[ability.name])
                 else:
-                    abilityDmgData[ability].append(0)
-            if(sum(abilityDmgData[ability]) == 0):
-                del abilityDmgData[ability]
-        abilityDmgDataName = {}
-        for index in abilityDmgData: #fill similar data list but with ability name as index
-            abilityDmgDataName[index.name] = abilityDmgData[index]
-        abilityDmgDataAll = []
-        for index in abilityDmgDataName:
-            abilityDmgDataAll.append(go.Bar(name=index, x=x, y=abilityDmgDataName[index]))
-        fig = go.Figure(data=abilityDmgDataAll)
+                    abdmg.append(0)
+            if sum:
+                abilityData.append(go.Bar(name=ability.name, x=x, y=abdmg))
+
+        fig = go.Figure(data=abilityData)
         fig.update_layout(barmode="stack", bargap=0)
         fig.update_xaxes(title_text='Tick and Used Abilities (Primary target) ('+str(dps)+' dps)', title_font = {"size": 20})
         fig.update_yaxes(title_text='Damage on Primary target', title_font = {"size": 20})
 
         #from below, same as other 2
-        for tc in range(len(abilityOrder)): #abilities used in order
-            if (len(abilityOrder[tc])==0):
+        for tc, ability in enumerate(abilityOrder): #add used abilities under x axis
+            if type(ability) == OtherAbility:
                 continue
-            if(abilityOrder[tc][0].name == "Poison"):
-                continue
-            if (tc >= 1):
-                if (len(abilityOrder[tc-1])!=0):
-                    if (abilityOrder[tc][0] == abilityOrder[tc - 1][0]):
+            if tc >= 1:
+                if type(abilityOrder[tc-1]) != OtherAbility:
+                    if ability == abilityOrder[tc - 1]:
                         continue
-            source = Image.open(abilityOrder[tc][0].icon)
+            source = Image.open(ability.icon)
             fig.add_layout_image(
                 source=source,
                 xref="x",
@@ -163,40 +152,34 @@ class makeGraph():
 
     def sDetail(dmgS, abilityOrder, bar, otherAbList, dps):
         x = list(range(len(dmgS)))
-        abilityDmgData = {}
         barAndOtherAb = bar + otherAbList
-        
+        abilityData = []
         for ability in barAndOtherAb:
-            abilityDmgData[ability] = []
-            for hitsInTickDict in dmgS:
-                if (ability in hitsInTickDict):
-                    abilityDmgData[ability].append(sum(hitsInTickDict[ability]))
+            abdmg = []
+            sum = 0
+            for dictTick in dmgS:
+                if ability.name in dictTick:
+                    sum += dictTick[ability.name]
+                    abdmg.append(dictTick[ability.name])
                 else:
-                    abilityDmgData[ability].append(0)
-            if(sum(abilityDmgData[ability]) == 0):
-                del abilityDmgData[ability]
-        abilityDmgDataName = {}
-        for index in abilityDmgData: #fill similar data list but with ability name as index
-            abilityDmgDataName[index.name] = abilityDmgData[index]
-        abilityDmgDataAll = []
-        for index in abilityDmgDataName:
-            abilityDmgDataAll.append(go.Bar(name=index, x=x, y=abilityDmgDataName[index]))
-        fig = go.Figure(data=abilityDmgDataAll)
+                    abdmg.append(0)
+            if sum:
+                abilityData.append(go.Bar(name=ability.name, x=x, y=abdmg))
+
+        fig = go.Figure(data=abilityData)
         fig.update_layout(barmode="stack", bargap=0)
         fig.update_xaxes(title_text='Tick and Used Abilities (Secondary targets\'average) ('+str(dps)+' dps)', title_font = {"size": 20})
         fig.update_yaxes(title_text='Average damage on Secondary targets', title_font = {"size": 20})
 
         #from below, same as other 2
-        for tc in range(len(abilityOrder)): #abilities used in order
-            if (len(abilityOrder[tc])==0):
+        for tc, ability in enumerate(abilityOrder): #add used abilities under x axis
+            if type(ability) == OtherAbility:
                 continue
-            if(abilityOrder[tc][0].name == "Poison"):
-                continue
-            if (tc >= 1):
-                if (len(abilityOrder[tc-1])!=0):
-                    if (abilityOrder[tc][0] == abilityOrder[tc - 1][0]):
+            if tc >= 1:
+                if type(abilityOrder[tc-1]) != OtherAbility:
+                    if ability == abilityOrder[tc - 1]:
                         continue
-            source = Image.open(abilityOrder[tc][0].icon)
+            source = Image.open(ability.icon)
             fig.add_layout_image(
                 source=source,
                 xref="x",
