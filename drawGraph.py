@@ -8,15 +8,16 @@ class makeGraph():
     def psCompare(dmgP,dmgS, abilityOrder, bar):
         x = list(range(len(dmgP)))
         yP, yS = [], []
-        for hitsInTickP, hitsInTickS in zip(dmgP, dmgS):
-            dmgInTickP = 0
-            dmgInTickS = 0
-            for abiIndexP, abiIndexS in zip(hitsInTickP, hitsInTickS):
-                dmgInTickP += hitsInTickP[abiIndexP]
-                dmgInTickS += hitsInTickS[abiIndexS]
-            yP.append(dmgInTickP)
-            yS.append(dmgInTickS)
-                
+        for hitsInTick in dmgP:
+            dmgInTick = 0
+            for abiIndex in hitsInTick:
+                dmgInTick += hitsInTick[abiIndex]
+            yP.append(dmgInTick)
+        for hitsInTick in dmgS:
+            dmgInTick = 0
+            for abiIndex in hitsInTick:
+                dmgInTick += hitsInTick[abiIndex]
+            yS.append(dmgInTick)
         fig = go.Figure(data=[go.Bar(
             name = "Primary target",
             x = x,

@@ -55,11 +55,7 @@ class Ability:
             self.sDmg = np.append(self.sDmg,total)
             self.hitsS = np.append(self.hitsS, count)
         self.pDmg = np.round(self.pDmg, decimals=1)
-        self.sDmg = np.round(self.sDmg, decimals=1)
-
-        self.dmgPrimary = self.pDmg.copy()
-        self.dmgSecondary = self.sDmg.copy()
-        
+        self.sDmg = np.round(self.sDmg, decimals=1)        
 
 #tc = tick count (basicaly the time)
 #cd = how long you have to wait till you can use the ability again

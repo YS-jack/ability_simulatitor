@@ -9,30 +9,31 @@ if __name__ == "__main__":
     bar = Bar()
 
     #simulate 1 bar (bar.bar)
-    bar.bar = [bar.magic.gchain, bar.magic.sunshine,  bar.magic.dbreath, bar.magic.tsunami,
-    bar.magic.wild_magic, bar.magic.corruption_blast, bar.magic.deep_impact, bar.magic.magma_tempest,
-    bar.magic.sonic_wave, bar.defence.devotion, bar.magic.combust, bar.magic.omnipower_igneous]
+    bar.bar = [bar.magic.gchain,bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.magma_tempest,  bar.magic.sunshine, bar.magic.tsunami,
+    bar.magic.wild_magic,  bar.magic.deep_impact, 
+    bar.magic.sonic_wave, bar.const.tuska, bar.magic.combust, bar.magic.omnipower_igneous]
 
     with cProfile.Profile() as pr:
         bar.simulate()
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     now = datetime.now()
-    filestring = "./profiles/" + now.strftime("%y-%m-%d  %H_%M ") + "12 abilities simulation"
-    #stats.dump_stats(filename=filestring)
+    filestring = "./profiles/" + now.strftime("%y-%m-%d  %H_%M ") + "12 abilities 4min attempt1"
+    stats.dump_stats(filename=filestring)
 
     #bar.printSimulationResult()
     bar.setDmgDitc()
     bar.showResutGraph()#"""
 
-
-
     #get optimal bar using abilities in pool[]
     #pool = [bar.magic.sunshine, bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.sonic_wave, bar.magic.gchain, bar.magic.magma_tempest, const.tuska, bar.magic.wild_magic, bar.magic.deep_impact, bar.magic.omnipower_igneous, bar.magic.tsunami] 
-    """pool = [bar.magic.sunshine, bar.magic.sonic_wave, bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.gchain,
-    bar.magic.magma_tempest, bar.const.tuska, bar.magic.wild_magic, bar.magic.deep_impact, bar.magic.tsunami] 
+    """pool = [
+        bar.magic.sunshine, bar.magic.sonic_wave, bar.magic.corruption_blast, 
+        bar.magic.dbreath, bar.magic.gchain, bar.magic.magma_tempest, 
+        bar.const.tuska, bar.magic.wild_magic, bar.magic.deep_impact, 
+        bar.magic.tsunami, bar.magic.omnipower_igneous, bar.magic.corruption_blast] 
     
-    # ,bar.const.sacrifice, bar.magic.omnipower_igneous
+    # ,bar.const.sacrifice, 
 
     optimizer = Optimizer()
     optimizer.findTopAOE(bar, pool, 50) #get top n bars"""
