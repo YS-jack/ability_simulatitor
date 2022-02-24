@@ -29,13 +29,14 @@ class Optimizer():
         return dt_string
 
     def copyInstInfo(self, newbarInst, originalInst):
-        newbarInst.atk = originalInst.atk
+        newbarInst.poisonDmg = originalInst.poisonDmg
+        """newbarInst.atk = originalInst.atk
         newbarInst.str = originalInst.str
         newbarInst.magic = originalInst.magic
         newbarInst.range = originalInst.range
         newbarInst.defence = originalInst.defence
         newbarInst.const = originalInst.const
-        newbarInst.otherAbility = originalInst.otherAbility
+        newbarInst.otherAbility = originalInst.otherAbility"""
         """newbarInst.otherAbs = originalInst.otherAbs
         newbarInst.otherCanHeal = originalInst.otherCanHeal"""
         #newbarInst.damageInst = originalInst.damageInst (for unknown reason this decreases damage for every bar except the first)
@@ -54,18 +55,19 @@ class Optimizer():
             barInst.bar=barPattern
             self.copyInstInfo(barInst,bar)
             barInst.simulate()
+            dpsS = barInst.getDpsS()
             #find if in top topN
-            if (topDmgS[-1] < barInst.getDpsS()):
+            if (topDmgS[-1] < dpsS):
                 for i in range(len(topDmgS)):
-                    if(topDmgS[i] < barInst.getDpsS()):
-                        topDmgS.insert(i, barInst.getDpsS())
+                    if(topDmgS[i] < dpsS):
+                        topDmgS.insert(i, dpsS)
                         topDmgBars.insert(i, barPattern)
                         topDmgP.insert(i, barInst.getDpsP())
                         if (i == 0):
                             print("[",end="")
                             for ability in barPattern:
                                 print(ability.name,end=", ")
-                            print("]\texpected dps on secondary targets(average) =",barInst.getDpsS())
+                            print("]\texpected dps on secondary targets(average) =",dpsS)
                             self.printTime()
                             print()
                         if (len(topDmgS) > topN):
@@ -87,7 +89,8 @@ class Optimizer():
             f.write(line+"\n")
         f.close()
 
-        return topDmgBars[0]
+        return(topDmgBars[0])
+
         
     def printBestBarInfo(self, bar, bestBarPattern):
         for ability in bestBarPattern:

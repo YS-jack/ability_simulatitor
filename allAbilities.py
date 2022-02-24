@@ -2,10 +2,7 @@ import abilityDef as Ability
 from playerInfo import DUALWIELD, PLANTEDFEET, WEAPONPOISON, CINDERBANE, KWUARMINCPOTENCY
 from timeConvert import stot
 
-BERSERKDUR = 34 #duration of berserk (ticks)
-SUNSHINEDUR = stot(30) + PLANTEDFEET * stot(7.8) #seconds
-DEATHSWIFTNESSDUR = stot(30) + PLANTEDFEET * stot(7.8) #seconds
-GCHAINBUFFDUR = 10 #ticks, duration of gchain effect
+
 
 #TODO: auto attacks (natural + from non-damaging abilities), dark magic damage, aftershock damage, cannon, poison, biting, blood reaver(soul split), armour spike
 class Attack:

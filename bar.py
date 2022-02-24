@@ -1,8 +1,6 @@
 import math
-import random
-from allAbilities import *
 from timeConvert import stot, ttos
-from playerInfo import *
+from playerInfo import * #INITADREN, NOTACTIVE, 
 import calculator
 from drawGraph import makeGraph
 import numpy as np
@@ -10,17 +8,7 @@ SIMULATIONTIME = 60*5 # seconds
 
 class Bar():
     def __init__(self) -> None:
-        self.atk = Attack()
-        self.str = Strength()
-        self.magic = Magic()
-        self.range = Range()
-        self.defence = Defence()
-        self.const = Const()
-        self.otherAbility = OtherAbility()
-        #abilities that dont use gchain buff, dont impact adren, not displayed in result graph x axis icon TODO add aftershock and cannon, puncture, blood reaver .. in self.otherAbs
-        """self.otherAbs = [self.otherAbility.poisonP,self.otherAbility.poisonS,self.otherAbility.noAbility]#dont insert, only append
-        self.otherAbsName = [self.otherAbility.poisonP.name, self.otherAbility.noAbility] #dont insert, only append
-        """
+        self.poisonDmg = 0
         self.bar = []
         self.usedAbility = np.array([],dtype=object)
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
@@ -41,17 +29,10 @@ class Bar():
         self.hitsS = np.zeros((self.y, self.simt))
         self.abilityOffCd = np.zeros(self.barlen)
         
-        self.abilityAdrens = np.array([])
-        self.abilityAdrenChange = np.array([])
-        self.offGcdChanneledArray = np.array([])
-        for ability in self.bar:
-            self.abilityAdrens = np.append(self.abilityAdrens, [ability.req])
-            self.abilityAdrenChange = np.append(self.abilityAdrenChange, [ability.change])
-            self.offGcdChanneledArray = np.append(self.offGcdChanneledArray, [ability.dur])
-
-        self.abilityCd = np.array([])
-        for ability in self.bar:
-            self.abilityCd = np.concatenate((self.abilityCd,[ability.cd]))
+        self.abilityAdrens = np.array([ability.req for ability in self.bar])
+        self.abilityAdrenChange = np.array([ability.req for ability in self.bar])
+        self.offGcdChanneledArray = np.array([ability.req for ability in self.bar])
+        self.abilityCd = np.array([ability.cd for ability in self.bar])
         #self.abilityCd = np.concatenate((self.abilityCd,np.zeros(len(self.otherAbs))))
 
         if  STYLE == STYLEMAGIC:
@@ -60,29 +41,17 @@ class Bar():
             multiplier = DEATHSSWIFTNESSMULT
         else:
             multiplier = BERSERKMULT
-        for i, ability in enumerate(self.bar):
-            if i == 0:
-                if ability.bleed:#or type(ability) == OtherAbility:
-                    self.berserkMult = np.array([[1]])
-                else:
-                    self.berserkMult = np.array([[multiplier]])
-            else:
-                if ability.bleed:# or type(ability) == OtherAbility:
-                    self.berserkMult = np.append(self.berserkMult,[[1]],axis=0)
-                else:
-                    self.berserkMult = np.append(self.berserkMult,[[multiplier]],axis=0)
-
-    
+        self.berserkMult = np.array([[1] if ability.bleed else [multiplier] for ability in self.bar])
 
     def flagBerserk(self, ability):
-        if ability.name == self.str.berserk.name and STYLE == STYLEMELEE:
+        if ability.name == "Berserk" and STYLE == STYLEMELEE:
             self.berserkOfftc = self.tc + BERSERKDUR
-        elif ability.name == self.magic.sunshine.name and STYLE == STYLEMAGIC:
+        elif ability.name == "Sunshine" and STYLE == STYLEMAGIC:
             self.berserkOfftc = self.tc + SUNSHINEDUR
-        elif ability.name == self.range.death_swift.name and STYLE == STYLERANGED:
+        elif ability.name == "Death's Swiftness" and STYLE == STYLERANGED:
             self.berserkOfftc = self.tc + DEATHSWIFTNESSDUR
     def flagGchain(self, ability):
-        if (ability.name == self.magic.gchain.name):
+        if ability.name == "Greater Chain":
             self.gchainBuff = ACTIVE
             self.gchainOfftc = self.tc + GCHAINBUFFDUR
     def getNextAbility(self):
@@ -107,14 +76,14 @@ class Bar():
                 #set usedAbility
                 self.usedAbility = np.concatenate((self.usedAbility, np.full(int(self.offGcdChanneledArray.item(i)),ability)))
                 return [ability, i]
-        return [self.otherAbility.noAbility, -1] #when no ability is available. 
+        return [None, -1] #when no ability is available. 
         
     def checkGchain(self, ability):
-        notApplicableToGchain = [self.magic.magma_tempest.name, self.magic.gchain.name]# + self.otherAbsName
+        notApplicableToGchain = ["Magma Tempest", "Greater Chain"]# + self.otherAbsName
         if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability.name not in notApplicableToGchain and np.sum(ability.pDmg)):#if not used yet
             self.gchainOfftc = 0
             self.gchainBuff = NOTACTIVE
-            if (ability.name == self.magic.corruption_blast.name):
+            if (ability.name == "Corruption Blast"):
                 return 1 #return multiplier of damage to s target
             else:
                 return 0.5
@@ -128,19 +97,19 @@ class Bar():
         return bigA
             
     def fillHits(self, ability, inde):#fill dmgP and dmgS caused by "ability" 
-        if ability.name != self.otherAbility.noAbility.name:
+        if ability!= None:
             #add damage and hits to dmgP and hitsP
             self.dmgP = self.addArray(self.dmgP, ability.pDmg, inde)
             self.hitsP = self.addArray(self.hitsP, ability.hitsP, inde)
             #add gchainMult * dmgPrimary damage to dmgS
             gchainMult = self.checkGchain(ability)
-            if gchainMult and ability.name == self.magic.corruption_blast.name: #if ability is cblast
+            if gchainMult and ability.name == "Corruption Blast": #if ability is cblast
                 gcCbDmg = ability.pDmg[:3]
                 self.dmgS = self.addArray(self.dmgS, gcCbDmg, inde)#array with all elements set to 0 except the first hit's damage of cblast
                 self.hitsS = self.addArray(self.hitsS, ability.hitsP*(AVERAGENENEMIES-1), inde)
             elif gchainMult:
                 self.dmgS = self.addArray(self.dmgS, gchainMult*ability.pDmg, inde)
-                self.hitsS = self.addArray(self.hitsS, ability.hitsP * min(self.magic.gchain.nAOE,AVERAGENENEMIES - 1), inde)
+                self.hitsS = self.addArray(self.hitsS, ability.hitsP * min(2 + CAROMING,AVERAGENENEMIES - 1), inde)
 
             #add damage and hits to dmgS and hitsS
             if ability.nAOE:
@@ -150,23 +119,13 @@ class Bar():
         if self.berserkOfftc >= self.tc:
             self.dmgP[:,self.tc] *= BERSERKMULT
             self.dmgS[:,self.tc] *= BERSERKMULT
-
-        #self.addPoison()
-        #damage cap
-        #heal
-        #reaver
-        #add expected posion hits (no more rolling random)
-        #add to self.dmgPTotal, self.dmgSTotal, including poison
         
     def simulate(self):
         self.barlen = len(self.bar)
         self.initArrays()
         while self.tc < self.simt:
-            #self.takeDamage()
             nextAbility = self.getNextAbility() #returns ability
             self.fillHits(nextAbility[0], nextAbility[1]) #fill dmgP, dmgS, addHealArray()
-            #self.heal()#heal
-            #self.addReaverDmg()# apply damage of blood reaver passive
             self.tc += 1
     
     def setDmgDitc(self):
@@ -187,15 +146,13 @@ class Bar():
         #print(self.dmgSDict)
 
     def getDpsP(self):
-        return math.floor((np.sum(self.dmgP) + (np.sum(self.hitsP) + np.sum(self.hitsS))*self.otherAbility.poisonP.pDmg.item(0)*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3))/ttos(self.simt))
+        return math.floor((np.sum(self.dmgP) + (np.sum(self.hitsP) + np.sum(self.hitsS))*self.poisonDmg*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3))/ttos(self.simt))
     
     def getDpsS(self):
-        return math.floor((np.sum(self.dmgS) + (np.sum(self.hitsS))*self.otherAbility.poisonP.pDmg.item(0)*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3)/AVERAGENENEMIES)/ttos(self.simt))
+        return math.floor((np.sum(self.dmgS) + (np.sum(self.hitsS))*self.poisonDmg*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3)/AVERAGENENEMIES)/ttos(self.simt))
 
     def showResutGraph(self):
         makeGraph.psCompare(self.dmgPDict, self.dmgSDict, list(self.usedAbility), self.bar)
-        """otherAbsP = self.otherAbs[0:1] + self.otherAbs[2:]
-        otherAbsS = self.otherAbs[1:]"""
         makeGraph.pDetail(self.dmgPDict, list(self.usedAbility), self.bar, self.getDpsP())# otherAbsP, self.getDpsP())
         makeGraph.sDetail(self.dmgSDict, list(self.usedAbility), self.bar, self.getDpsS())#otherAbsS, self.getDpsS())
 

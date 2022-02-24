@@ -23,8 +23,8 @@ def ultAdrenBonous():
 class Ability:
     def __init__(self, name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg,icon):
         self.name = name
-        self.cd = stot(cd) #tick
-        self.dur = stot(dur) #tick
+        self.cd = stot(cd) 
+        self.dur = stot(dur)
         self.req = req
         self.change = change
         self.bleed = bleed

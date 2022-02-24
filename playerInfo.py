@@ -1,3 +1,4 @@
+from timeConvert import stot
 #player stat, armour
 ACCURACY = 4360
 STRENGTHBONOUS = 199.2 #for all 3 combat styles
@@ -134,3 +135,7 @@ ACTIVE = 1
 POISONPROCCHANCE = 1/6
 RELENTLESSCD = 30 #seconds
 LUCKYNESSMULT = 0.6 #1 is average, 0.5 is half the average luck, 2 is double the average luck (no hard math, NANTONAKU)
+BERSERKDUR = 34 #duration of berserk (ticks)
+SUNSHINEDUR = stot(30) + PLANTEDFEET * stot(7.8) #seconds
+DEATHSWIFTNESSDUR = stot(30) + PLANTEDFEET * stot(7.8) #seconds
+GCHAINBUFFDUR = 10 #ticks, duration of gchain effect
