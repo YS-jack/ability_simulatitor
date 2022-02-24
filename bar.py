@@ -6,7 +6,7 @@ from playerInfo import *
 import calculator
 from drawGraph import makeGraph
 import numpy as np
-SIMULATIONTIME = 4*60 # seconds
+SIMULATIONTIME = 60*5 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -18,9 +18,9 @@ class Bar():
         self.const = Const()
         self.otherAbility = OtherAbility()
         #abilities that dont use gchain buff, dont impact adren, not displayed in result graph x axis icon TODO add aftershock and cannon, puncture, blood reaver .. in self.otherAbs
-        self.otherAbs = [self.otherAbility.poisonP,self.otherAbility.poisonS,self.otherAbility.noAbility]#dont insert, only append
+        """self.otherAbs = [self.otherAbility.poisonP,self.otherAbility.poisonS,self.otherAbility.noAbility]#dont insert, only append
         self.otherAbsName = [self.otherAbility.poisonP.name, self.otherAbility.noAbility] #dont insert, only append
-        
+        """
         self.bar = []
         self.usedAbility = np.array([],dtype=object)
         self.simt = stot(SIMULATIONTIME)#length of simulation in tick
@@ -34,7 +34,7 @@ class Bar():
         self.gchainOfftc = -1 #tc of until when gchain effect is active
 
     def initArrays(self):
-        self.y = self.barlen + len(self.otherAbs)
+        self.y = self.barlen# + len(self.otherAbs)
         self.dmgP = np.zeros((self.y, self.simt))
         self.dmgS = np.zeros((self.y, self.simt))
         self.hitsP = np.zeros((self.y, self.simt))
@@ -52,7 +52,7 @@ class Bar():
         self.abilityCd = np.array([])
         for ability in self.bar:
             self.abilityCd = np.concatenate((self.abilityCd,[ability.cd]))
-        self.abilityCd = np.concatenate((self.abilityCd,np.zeros(len(self.otherAbs))))
+        #self.abilityCd = np.concatenate((self.abilityCd,np.zeros(len(self.otherAbs))))
 
         if  STYLE == STYLEMAGIC:
             multiplier = SUNSHINEMULT
@@ -60,23 +60,19 @@ class Bar():
             multiplier = DEATHSSWIFTNESSMULT
         else:
             multiplier = BERSERKMULT
-        for i, ability in enumerate(self.bar + self.otherAbs):
+        for i, ability in enumerate(self.bar):
             if i == 0:
-                if ability.bleed or type(ability) == OtherAbility:
+                if ability.bleed:#or type(ability) == OtherAbility:
                     self.berserkMult = np.array([[1]])
                 else:
                     self.berserkMult = np.array([[multiplier]])
             else:
-                if ability.bleed or type(ability) == OtherAbility:
+                if ability.bleed:# or type(ability) == OtherAbility:
                     self.berserkMult = np.append(self.berserkMult,[[1]],axis=0)
                 else:
                     self.berserkMult = np.append(self.berserkMult,[[multiplier]],axis=0)
 
-    def takeDamage(self):
-        damage = self.enemy.getAttack(self.tc)
-        self.health -= damage
-        #if(self.health<0):
-            #print("you died at tick",self.tc)
+    
 
     def flagBerserk(self, ability):
         if ability.name == self.str.berserk.name and STYLE == STYLEMELEE:
@@ -114,7 +110,7 @@ class Bar():
         return [self.otherAbility.noAbility, -1] #when no ability is available. 
         
     def checkGchain(self, ability):
-        notApplicableToGchain = [self.magic.magma_tempest.name, self.magic.gchain.name] + self.otherAbsName
+        notApplicableToGchain = [self.magic.magma_tempest.name, self.magic.gchain.name]# + self.otherAbsName
         if (self.gchainOfftc >= self.tc and self.gchainBuff == ACTIVE and ability.name not in notApplicableToGchain and np.sum(ability.pDmg)):#if not used yet
             self.gchainOfftc = 0
             self.gchainBuff = NOTACTIVE
@@ -130,21 +126,6 @@ class Bar():
         else:
             bigA[inde][self.tc:self.simt] += smallA[:self.simt - self.tc - smallA.shape[0]]
         return bigA
-    def addPoison(self):
-        if self.tc:
-            nhitsP = np.sum(self.hitsP[:,self.tc-1])
-            nhitsS = np.sum(self.hitsS[:,self.tc-1])
-            
-            poisonHitsP = math.floor((nhitsP+nhitsS)*POISONPROCCHANCE)
-            poisonDmgP = poisonHitsP*self.otherAbility.poisonP.pDmg.item(0)
-            
-            self.hitsP[self.barlen,self.tc] = poisonHitsP
-            self.dmgP[self.barlen,self.tc] = poisonDmgP
-            
-            poisonHitsS = math.floor(nhitsS*POISONPROCCHANCE)
-            poisonDmgS = poisonHitsS*self.otherAbility.poisonS.sDmg.item(0)/AVERAGENENEMIES
-            self.hitsS[self.barlen+1,self.tc] = poisonHitsS
-            self.dmgS[self.barlen+1,self.tc] = poisonDmgS
             
     def fillHits(self, ability, inde):#fill dmgP and dmgS caused by "ability" 
         if ability.name != self.otherAbility.noAbility.name:
@@ -170,7 +151,7 @@ class Bar():
             self.dmgP[:,self.tc] *= BERSERKMULT
             self.dmgS[:,self.tc] *= BERSERKMULT
 
-        self.addPoison()
+        #self.addPoison()
         #damage cap
         #heal
         #reaver
@@ -187,6 +168,57 @@ class Bar():
             #self.heal()#heal
             #self.addReaverDmg()# apply damage of blood reaver passive
             self.tc += 1
+    
+    def setDmgDitc(self):
+        self.dmgPDict = [] #[{"ability1":damage, "ability2":damage,...},{(tick1)},{tick2},{tick3},...]
+        self.dmgSDict = []
+        for i in range(self.simt):
+            self.dmgPDict.append({})
+            self.dmgSDict.append({})
+            for j, ability in enumerate(self.bar):# + self.otherAbs):
+                pdmg = self.dmgP.item(j, i)
+                sdmg = self.dmgS.item(j, i)
+                name = ability.name
+                if pdmg:
+                    self.dmgPDict[i][name] = math.floor(pdmg)
+                if sdmg:
+                    self.dmgSDict[i][name] = math.floor(sdmg)
+        #print(self.dmgPDict)
+        #print(self.dmgSDict)
+
+    def getDpsP(self):
+        return math.floor((np.sum(self.dmgP) + (np.sum(self.hitsP) + np.sum(self.hitsS))*self.otherAbility.poisonP.pDmg.item(0)*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3))/ttos(self.simt))
+    
+    def getDpsS(self):
+        return math.floor((np.sum(self.dmgS) + (np.sum(self.hitsS))*self.otherAbility.poisonP.pDmg.item(0)*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3)/AVERAGENENEMIES)/ttos(self.simt))
+
+    def showResutGraph(self):
+        makeGraph.psCompare(self.dmgPDict, self.dmgSDict, list(self.usedAbility), self.bar)
+        """otherAbsP = self.otherAbs[0:1] + self.otherAbs[2:]
+        otherAbsS = self.otherAbs[1:]"""
+        makeGraph.pDetail(self.dmgPDict, list(self.usedAbility), self.bar, self.getDpsP())# otherAbsP, self.getDpsP())
+        makeGraph.sDetail(self.dmgSDict, list(self.usedAbility), self.bar, self.getDpsS())#otherAbsS, self.getDpsS())
+
+"""
+    def printSimulationResult(self):
+        print("simulation time\t=", ttos(self.simt),"seconds")
+        print()
+        print("Primary dmg/s \t\t=",math.floor(self.dmgPTotal/ttos(self.simt)))
+        print("Primary dmg/min \t=",math.floor(self.dmgPTotal*60/ttos(self.simt)))
+        print("average time to kill primary enemy \t", math.floor(ENEMYHEALTH/(self.dmgPTotal/ttos(self.simt))))
+        print("Total primary damage\t=",self.dmgPTotal)
+        print()
+        print("Secondary dmg/s \t=",math.floor(self.dmgSTotal/ttos(self.simt)))
+        print("Secondary dmg/min \t=",math.floor(self.dmgSTotal*60/ttos(self.simt)))
+        print("average time to kill secondary enemy \t", math.floor(ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt))))
+        print("Total secondary damage\t=",self.dmgSTotal)
+        print()
+    
+    def takeDamage(self):
+        damage = self.enemy.getAttack(self.tc)
+        self.health -= damage
+        #if(self.health<0):
+            #print("you died at tick",self.tc)
 
     def heal(self): #individual heal, not total of soul split, vamp, etc
         #heal this tick
@@ -258,51 +290,5 @@ class Bar():
             for index in dmgPS[i]:
                 for j in range(len(dmgPS[i][index])):
                     dmgPS[i][index][j] = math.floor(dmgPS[i][index][j])
-    
-    def setDmgDitc(self):
-        self.dmgPDict = [] #[{"ability1":damage, "ability2":damage,...},{(tick1)},{tick2},{tick3},...]
-        self.dmgSDict = []
-        for i in range(self.simt):
-            self.dmgPDict.append({})
-            self.dmgSDict.append({})
-            for j, ability in enumerate(self.bar + self.otherAbs):
-                pdmg = self.dmgP.item(j, i)
-                sdmg = self.dmgS.item(j, i)
-                name = ability.name
-                if pdmg:
-                    self.dmgPDict[i][name] = math.floor(pdmg)
-                if sdmg:
-                    self.dmgSDict[i][name] = math.floor(sdmg)
-        #print(self.dmgPDict)
-        #print(self.dmgSDict)
 
-    def printSimulationResult(self):
-        print("simulation time\t=", ttos(self.simt),"seconds")
-        print()
-        print("Primary dmg/s \t\t=",math.floor(self.dmgPTotal/ttos(self.simt)))
-        print("Primary dmg/min \t=",math.floor(self.dmgPTotal*60/ttos(self.simt)))
-        print("average time to kill primary enemy \t", math.floor(ENEMYHEALTH/(self.dmgPTotal/ttos(self.simt))))
-        print("Total primary damage\t=",self.dmgPTotal)
-        print()
-        print("Secondary dmg/s \t=",math.floor(self.dmgSTotal/ttos(self.simt)))
-        print("Secondary dmg/min \t=",math.floor(self.dmgSTotal*60/ttos(self.simt)))
-        print("average time to kill secondary enemy \t", math.floor(ENEMYHEALTH/(self.dmgSTotal/ttos(self.simt))))
-        print("Total secondary damage\t=",self.dmgSTotal)
-        print()
-
-    def getDpsP(self):
-        return math.floor(np.sum(self.dmgP)/ttos(self.simt))
-    def getDpsS(self):
-        return math.floor(np.sum(self.dmgS/ttos(self.simt)))
-
-    def getExpectedDpsP(self):
-        return math.floor((self.totalDmgNoPoisonP + self.poisonProcAttempts * (self.otherAbility.poisonP.pDmg[0][0][0] + self.otherAbility.poisonP.pDmg[0][0][1]) * self.damageInst.abilityDmg * 0.01 / 2)/ttos(self.simt)*POISONPROCCHANCE)
-    def getExpectedDpsS(self):
-        return math.floor((self.totalDmgNoPoisonS + self.poisonProcAttempts * (self.otherAbility.poisonS.sDmg[0][0][0] + self.otherAbility.poisonS.sDmg[0][0][1]) * self.damageInst.abilityDmg * 0.01 / 2)/ttos(self.simt)*POISONPROCCHANCE)
-    
-    def showResutGraph(self):
-        makeGraph.psCompare(self.dmgPDict, self.dmgSDict, list(self.usedAbility), self.bar)
-        otherAbsP = self.otherAbs[0:1] + self.otherAbs[2:]
-        otherAbsS = self.otherAbs[1:]
-        makeGraph.pDetail(self.dmgPDict, list(self.usedAbility), self.bar, otherAbsP, self.getDpsP())
-        makeGraph.sDetail(self.dmgSDict, list(self.usedAbility), self.bar, otherAbsS, self.getDpsS())
+"""

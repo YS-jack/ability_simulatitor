@@ -1,5 +1,3 @@
-from turtle import pd
-from unicodedata import name
 import abilityDef as Ability
 from playerInfo import DUALWIELD, PLANTEDFEET, WEAPONPOISON, CINDERBANE, KWUARMINCPOTENCY
 from timeConvert import stot

@@ -1,12 +1,11 @@
-from itertools import combinations
+from itertools import permutations
 from bar import Bar
 from datetime import datetime
 
 class Optimizer():
     def __init__(self) -> None:
-        self.topPrimary = 0
-        self.topSecondary = 0
-    
+        pass
+
     def permutation(self, pool):
         if (len(pool) == 0):
             return []
@@ -37,8 +36,8 @@ class Optimizer():
         newbarInst.defence = originalInst.defence
         newbarInst.const = originalInst.const
         newbarInst.otherAbility = originalInst.otherAbility
-        newbarInst.otherAbs = originalInst.otherAbs
-        newbarInst.otherCanHeal = originalInst.otherCanHeal
+        """newbarInst.otherAbs = originalInst.otherAbs
+        newbarInst.otherCanHeal = originalInst.otherCanHeal"""
         #newbarInst.damageInst = originalInst.damageInst (for unknown reason this decreases damage for every bar except the first)
         #newbarInst.enemy = originalInst.enemy (for unknown reason this disables bloodreaver)
 
@@ -46,28 +45,27 @@ class Optimizer():
         topDmgS = [0]
         topDmgP = [0]
         topDmgBars = [Bar()]
-        barInst = [Bar()]
-        for barPattern in self.permutation(pool):
+
+        for barPattern in permutations(pool):
             #init ability cd
             for ability in pool:
                 ability.offcd = 0
-            barInst.append(Bar())
-            del barInst[0]
-            barInst[0].bar=barPattern
-            self.copyInstInfo(barInst[0],bar)
-            barInst[0].simulate()
+            barInst = Bar()
+            barInst.bar=barPattern
+            self.copyInstInfo(barInst,bar)
+            barInst.simulate()
             #find if in top topN
-            if (topDmgS[-1] < barInst[0].getExpectedDpsS()):
+            if (topDmgS[-1] < barInst.getDpsS()):
                 for i in range(len(topDmgS)):
-                    if(topDmgS[i] < barInst[0].getExpectedDpsS()):
-                        topDmgS.insert(i, barInst[0].getExpectedDpsS())
+                    if(topDmgS[i] < barInst.getDpsS()):
+                        topDmgS.insert(i, barInst.getDpsS())
                         topDmgBars.insert(i, barPattern)
-                        topDmgP.insert(i, barInst[0].getExpectedDpsP())
+                        topDmgP.insert(i, barInst.getDpsP())
                         if (i == 0):
                             print("[",end="")
                             for ability in barPattern:
                                 print(ability.name,end=", ")
-                            print("]\texpected dps on secondary targets(average) =",barInst[0].getExpectedDpsS())
+                            print("]\texpected dps on secondary targets(average) =",barInst.getDpsS())
                             self.printTime()
                             print()
                         if (len(topDmgS) > topN):
@@ -75,6 +73,7 @@ class Optimizer():
                             del topDmgBars[-1]
                             del topDmgP[-1]
                         break
+
         f = open("outputfile "+self.printDateTime()+".txt","w")
         print("top",topN,"bars:")
         for i in range(len(topDmgBars)):
@@ -87,7 +86,8 @@ class Optimizer():
             line = line + "]\texpected primary dps ="+str(topDmgP[i])+", secondary dps ="+str(topDmgS[i])
             f.write(line+"\n")
         f.close()
-        self.printBestBarInfo(bar, topDmgBars[0])
+
+        return topDmgBars[0]
         
     def printBestBarInfo(self, bar, bestBarPattern):
         for ability in bestBarPattern:
@@ -98,4 +98,5 @@ class Optimizer():
         barInst.simulate()
         #print("*************\tinfo of best bar:")
         #barInst.printSimulationResult()
+        barInst.setDmgDitc()
         barInst.showResutGraph()

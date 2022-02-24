@@ -80,9 +80,9 @@ class makeGraph():
             )
         fig.show()
 
-    def pDetail(dmgP, abilityOrder, bar, otherAbList, dps):
+    def pDetail(dmgP, abilityOrder, bar, dps):
         x = list(range(len(dmgP)))
-        barAndOtherAb = bar + otherAbList
+        barAndOtherAb = bar# + otherAbList
         abilityData = []
         for ability in barAndOtherAb:
             abdmg = []
@@ -151,9 +151,9 @@ class makeGraph():
         fig.show()
 
 
-    def sDetail(dmgS, abilityOrder, bar, otherAbList, dps):
+    def sDetail(dmgS, abilityOrder, bar, dps):
         x = list(range(len(dmgS)))
-        barAndOtherAb = bar + otherAbList
+        barAndOtherAb = bar# + otherAbList
         abilityData = []
         for ability in barAndOtherAb:
             abdmg = []
