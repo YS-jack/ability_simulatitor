@@ -2,9 +2,9 @@ from bar import Bar
 from datetime import datetime
 from multiprocessing import Process, Queue, Pipe
 import math
-from time import sleep
 import numpy as np
 
+NPC = 10 #number of simulating process, doesnt include the 1 ranking process
 class Optimizer():
     def __init__(self) -> None:
         pass
@@ -39,12 +39,8 @@ class Optimizer():
             barInst.bar=barPattern
             self.copyInstInfo(barInst,bar)
             barInst.simulate()
-            dpsS = barInst.getDpsS()
-            dpsP = barInst.getDpsP()
-            q.put([barPattern, dpsS, dpsP])
-        while 1:
-            q.put(id)
-            sleep(1)
+            q.put([barPattern, barInst.getDpsS(), barInst.getDpsP()])
+        q.put(id)
         
     def rank(self,q, conn, topN, nPc):
         topDmgS = [0]
@@ -82,23 +78,23 @@ class Optimizer():
         conn.close()
 
     def findTopAOE(self, bar, pool, topN):#TODO save top 5 just in case?
-        nPc = 7
         q = Queue()
         permList = self.permutation(pool)
-        permLen = math.floor(len(permList)/nPc)
+        permLen = math.floor(len(permList)/NPC)
         parent_conn, child_conn = Pipe()
         
-        pRank = Process(target=self.rank, args=(q, child_conn, topN, nPc)) #last input is number of pSim
+        pRank = Process(target=self.rank, args=(q, child_conn, topN, NPC)) #last input is number of pSim
+        #start processes
         pRank.start()
-        
-        proceList = [Process(target=self.simulate, args=(q, bar, pool, permList[permLen*i:permLen*(i+1)], i)) for i in range(nPc)]
+        proceList = [Process(target=self.simulate, args=(q, bar, pool, permList[permLen*i:permLen*(i+1)], i)) for i in range(NPC)]
         for p in proceList:
             p.start()
         
         valList = parent_conn.recv()
+        #end processes after recieving
         for p in proceList:
-            p.terminate()
-        pRank.terminate()
+            p.join()
+        pRank.join()
 
         topDmgBars = valList[0]
         topDmgP = valList[1]
@@ -127,7 +123,5 @@ class Optimizer():
         barInst.bar = bestBarPattern
         self.copyInstInfo(barInst, bar)
         barInst.simulate()
-        #print("*************\tinfo of best bar:")
-        #barInst.printSimulationResult()
         barInst.setDmgDitc()
         barInst.showResutGraph()
