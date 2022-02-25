@@ -3,8 +3,9 @@ from datetime import datetime
 from multiprocessing import Process, Queue, Pipe
 import math
 import numpy as np
+from bar import SIMULATIONTIME
 
-NPC = 10 #number of simulating process, doesnt include the 1 ranking process
+NPC = 5 #number of simulating process, doesnt include the 1 ranking process
 class Optimizer():
     def __init__(self) -> None:
         pass
@@ -100,7 +101,7 @@ class Optimizer():
         topDmgP = valList[1]
         topDmgS = valList[2]            
 
-        f = open("outputfile "+self.printDateTime()+".txt","w")
+        f = open("optimization result "+self.printDateTime()+ str(SIMULATIONTIME) + "sec" + str(len(pool)) + "abilities" + ".txt","w")
         print("top",topN,"bars:")
         for i in range(len(topDmgBars)):
             line = "["

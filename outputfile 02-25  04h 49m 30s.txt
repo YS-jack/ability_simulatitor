@@ -1,5 +1,0 @@
-[Sonic Wave, Corruption Blast, Greater Chain, Magma Tempest, Dragon Breath, Sunshine, ]	expected primary dps =432, secondary dps =405
-[Corruption Blast, Greater Chain, Magma Tempest, Dragon Breath, Sunshine, Sonic Wave, ]	expected primary dps =386, secondary dps =405
-[Magma Tempest, Corruption Blast, Greater Chain, Dragon Breath, Sunshine, Sonic Wave, ]	expected primary dps =386, secondary dps =405
-[Greater Chain, Magma Tempest, Corruption Blast, Dragon Breath, Sunshine, Sonic Wave, ]	expected primary dps =409, secondary dps =397
-[Corruption Blast, Greater Chain, Magma Tempest, Sonic Wave, Dragon Breath, Sunshine, ]	expected primary dps =459, secondary dps =377

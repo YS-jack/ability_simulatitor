@@ -14,10 +14,9 @@ if __name__ == "__main__":
     bar = Bar()
     bar.poisonDmg = other.poisonP.hitsP.item(0)
     #simulate 1 bar (bar.bar)
-    """bar.bar = [bar.magic.gchain,bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.magma_tempest,  bar.magic.sunshine, bar.magic.tsunami,
-    bar.magic.wild_magic,  bar.magic.deep_impact, 
-    bar.magic.sonic_wave, bar.const.tuska, bar.magic.combust, bar.magic.omnipower_igneous]
-
+    """bar.bar = [magic.gchain,magic.corruption_blast, magic.dbreath, magic.magma_tempest,  magic.sunshine, magic.tsunami,
+    magic.wild_magic,  magic.deep_impact, 
+    magic.sonic_wave, const.tuska, magic.combust, magic.omnipower_igneous]
     
     bar.simulate()
     
@@ -30,20 +29,21 @@ if __name__ == "__main__":
     pool = [
         magic.sunshine, magic.sonic_wave, magic.corruption_blast, 
         magic.dbreath, magic.gchain, magic.magma_tempest, 
-        const.tuska, magic.deep_impact]
+        magic.wild_magic, magic.deep_impact,
+        magic.tsunami, magic.omnipower_igneous, magic.combust]
     """
-        magic.wild_magic, 
-        magic.tsunami, magic.omnipower_igneous, magic.corruption_blast] """
+         
+          const.tuska, ] """
     
     
     optimizer = Optimizer()
     with cProfile.Profile() as pr:
-        bestBar = optimizer.findTopAOE(bar, pool,5) #get top n bars"""
+        bestBar = optimizer.findTopAOE(bar, pool,5) #get top n bars
 
-    #optimizer.printBestBarInfo(bar, bestBar)
+    optimizer.printBestBarInfo(bar, bestBar)
 
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     now = datetime.now()
     filestring = "./profiles/" + now.strftime("%y-%m-%d  %H_%M_%S ") + " " + str(NPC) + " processes " + str(len(pool)) + " abilities " + str(SIMULATIONTIME) +"sec optimisation"
-    stats.dump_stats(filename=filestring) 
+    stats.dump_stats(filename=filestring) #"""

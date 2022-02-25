@@ -1,10 +1,11 @@
+from lib2to3.pgen2.token import MINUS
 import math
 from timeConvert import stot, ttos
 from playerInfo import * #INITADREN, NOTACTIVE, 
-import calculator
 from drawGraph import makeGraph
 import numpy as np
-SIMULATIONTIME = 60*5 # seconds
+
+SIMULATIONTIME = 60*3 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -15,25 +16,22 @@ class Bar():
         self.tc = 0
         self.adrenNow = INITADREN
         self.offGcdChanneled = 0
-
+        self.tsunamiBoostOffCd = 0
         self.berserkOfftc = -1 #tc of until when berserk is active, set in flagBerserk()
-        self.damageInst = calculator.Damage()
         self.gchainBuff = NOTACTIVE
         self.gchainOfftc = -1 #tc of until when gchain effect is active
 
     def initArrays(self):
-        self.y = self.barlen# + len(self.otherAbs)
+        self.y = self.barlen
         self.dmgP = np.zeros((self.y, self.simt))
         self.dmgS = np.zeros((self.y, self.simt))
         self.hitsP = np.zeros((self.y, self.simt))
         self.hitsS = np.zeros((self.y, self.simt))
         self.abilityOffCd = np.zeros(self.barlen)
-        
         self.abilityAdrens = np.array([ability.req for ability in self.bar])
-        self.abilityAdrenChange = np.array([ability.req for ability in self.bar])
-        self.offGcdChanneledArray = np.array([ability.req for ability in self.bar])
+        self.abilityAdrenChange = np.array([ability.change for ability in self.bar])
+        self.offGcdChanneledArray = np.array([ability.dur for ability in self.bar])
         self.abilityCd = np.array([ability.cd for ability in self.bar])
-        #self.abilityCd = np.concatenate((self.abilityCd,np.zeros(len(self.otherAbs))))
 
         if  STYLE == STYLEMAGIC:
             multiplier = SUNSHINEMULT
@@ -55,17 +53,17 @@ class Bar():
             self.gchainBuff = ACTIVE
             self.gchainOfftc = self.tc + GCHAINBUFFDUR
     def getNextAbility(self):
-        self.abilityOffCd -= 1
         for i, ability in enumerate(self.bar):
             if (self.abilityOffCd.item(i) <= 0 and self.abilityAdrens.item(i) <= self.adrenNow and self.offGcdChanneled <= self.tc): #if ability i is available
                 #set ability offcd
-                self.abilityOffCd[i:i+1] = self.abilityCd[i] #set ability's + ability.cd
+                self.abilityOffCd[i:i+1] = self.abilityCd[i]
                 
                 #set time when next ability can activate (offGcdChanneled)
                 self.offGcdChanneled = self.tc + self.offGcdChanneledArray.item(i)
 
                 #set next tick's adrenailine
                 self.adrenNow = self.adrenNow + self.abilityAdrenChange.item(i)
+                
                 if (self.adrenNow > 100 + HEIGHTENEDSENSES * 10): #set to max adren if it was set to over max
                     self.adrenNow = 100 + HEIGHTENEDSENSES * 10
                 
@@ -124,9 +122,11 @@ class Bar():
         self.barlen = len(self.bar)
         self.initArrays()
         while self.tc < self.simt:
+            self.abilityOffCd -= 1
             nextAbility = self.getNextAbility() #returns ability
             self.fillHits(nextAbility[0], nextAbility[1]) #fill dmgP, dmgS, addHealArray()
             self.tc += 1
+
     
     def setDmgDitc(self):
         self.dmgPDict = [] #[{"ability1":damage, "ability2":damage,...},{(tick1)},{tick2},{tick3},...]

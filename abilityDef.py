@@ -1,9 +1,7 @@
 import numpy as np
 from timeConvert import stot
 from playerInfo import *
-import itertools
 from calculator import Damage
-import math
 
 def impatientBonous():
     p = 0.09 * IMPATIENT
@@ -92,5 +90,5 @@ class ult(Ability):
             self.change = 0
 
 class other(Ability):
-    def __init__(self, name, cd = 0, dur = 10, req = 0, change = 0, bleed = 0, nAOE = 0, pDmg = [[]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"): 
+    def __init__(self, name, cd = 0, dur = 0, req = 0, change = 0, bleed = 0, nAOE = 0, pDmg = [[]], sDmg = [[]],icon="./ability_icons/magic/Wrack.png"): 
         super().__init__(name, cd, dur, req, change, bleed, nAOE, pDmg, sDmg, icon)
