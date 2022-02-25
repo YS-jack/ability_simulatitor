@@ -5,7 +5,7 @@ from playerInfo import * #INITADREN, NOTACTIVE,
 from drawGraph import makeGraph
 import numpy as np
 
-SIMULATIONTIME = 60*3 # seconds
+SIMULATIONTIME = 60*4 # seconds
 
 class Bar():
     def __init__(self) -> None:
@@ -39,7 +39,7 @@ class Bar():
             multiplier = DEATHSSWIFTNESSMULT
         else:
             multiplier = BERSERKMULT
-        self.berserkMult = np.array([[1] if ability.bleed else [multiplier] for ability in self.bar])
+        self.berserkMult = np.array([1 if ability.bleed else multiplier for ability in self.bar])
 
     def flagBerserk(self, ability):
         if ability.name == "Berserk" and STYLE == STYLEMELEE:
@@ -113,11 +113,11 @@ class Bar():
             if ability.nAOE:
                 self.dmgS = self.addArray(self.dmgS, ability.sDmg, inde)
                 self.hitsS = self.addArray(self.hitsS, ability.hitsS * min(ability.nAOE,AVERAGENENEMIES - 1), inde)
-        
+
         if self.berserkOfftc >= self.tc:
-            self.dmgP[:,self.tc] *= BERSERKMULT
-            self.dmgS[:,self.tc] *= BERSERKMULT
-        
+            self.dmgP[:,self.tc] *= self.berserkMult
+            self.dmgS[:,self.tc] *= self.berserkMult
+
     def simulate(self):
         self.barlen = len(self.bar)
         self.initArrays()
@@ -146,10 +146,11 @@ class Bar():
         #print(self.dmgSDict)
 
     def getDpsP(self):
-        return math.floor((np.sum(self.dmgP) + (np.sum(self.hitsP) + np.sum(self.hitsS))*self.poisonDmg*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3))/ttos(self.simt))
+        pHits = np.sum(self.hitsP)
+        return math.floor((np.sum(self.dmgP) + (pHits + BLOODREAVER*(pHits + np.sum(self.hitsS)))*self.poisonDmg*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3))/ttos(self.simt))
     
     def getDpsS(self):
-        return math.floor((np.sum(self.dmgS) + (np.sum(self.hitsS))*self.poisonDmg*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3)/AVERAGENENEMIES)/ttos(self.simt))
+        return math.floor((np.sum(self.dmgS) + (np.sum(self.hitsS)/AVERAGENENEMIES)*self.poisonDmg*(POISONPROCCHANCE+POISONPROCCHANCE**2+POISONPROCCHANCE**3)/AVERAGENENEMIES)/ttos(self.simt))
 
     def showResutGraph(self):
         makeGraph.psCompare(self.dmgPDict, self.dmgSDict, list(self.usedAbility), self.bar)

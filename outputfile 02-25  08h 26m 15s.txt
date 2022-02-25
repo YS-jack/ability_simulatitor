@@ -1,5 +1,0 @@
-[Tuska's Wrath, Magma Tempest, Greater Chain, Sunshine, Corruption Blast, Dragon Breath, Deep Impact, Sonic Wave, ]	expected primary dps =2493, secondary dps =1696
-[Dragon Breath, Tuska's Wrath, Magma Tempest, Greater Chain, Sunshine, Corruption Blast, Deep Impact, Sonic Wave, ]	expected primary dps =2489, secondary dps =1692
-[Dragon Breath, Tuska's Wrath, Magma Tempest, Greater Chain, Sunshine, Deep Impact, Corruption Blast, Sonic Wave, ]	expected primary dps =2489, secondary dps =1692
-[Magma Tempest, Corruption Blast, Greater Chain, Sunshine, Tuska's Wrath, Dragon Breath, Deep Impact, Sonic Wave, ]	expected primary dps =2490, secondary dps =1690
-[Magma Tempest, Tuska's Wrath, Greater Chain, Sunshine, Corruption Blast, Dragon Breath, Deep Impact, Sonic Wave, ]	expected primary dps =2487, secondary dps =1690

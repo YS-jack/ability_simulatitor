@@ -14,31 +14,30 @@ if __name__ == "__main__":
     bar = Bar()
     bar.poisonDmg = other.poisonP.hitsP.item(0)
     #simulate 1 bar (bar.bar)
-    """bar.bar = [magic.gchain,magic.corruption_blast, magic.dbreath, magic.magma_tempest,  magic.sunshine, magic.tsunami,
-    magic.wild_magic,  magic.deep_impact, 
-    magic.sonic_wave, const.tuska, magic.combust, magic.omnipower_igneous]
+    bar.bar = [magic.gchain, magic.combust, magic.omnipower_igneous,magic.corruption_blast, magic.dbreath, magic.magma_tempest, magic.sonic_wave, magic.tsunami,
+    magic.wild_magic, magic.sunshine,  magic.deep_impact, 
+    const.tuska, ]
     
     bar.simulate()
-    
-    #bar.printSimulationResult()
+
     bar.setDmgDitc()
     bar.showResutGraph()#"""
 
     #get optimal bar using abilities in pool[]
     #pool = [bar.magic.sunshine, bar.magic.corruption_blast, bar.magic.dbreath, bar.magic.sonic_wave, bar.magic.gchain, bar.magic.magma_tempest, const.tuska, bar.magic.wild_magic, bar.magic.deep_impact, bar.magic.omnipower_igneous, bar.magic.tsunami] 
-    pool = [
+    """pool = [
         magic.sunshine, magic.sonic_wave, magic.corruption_blast, 
         magic.dbreath, magic.gchain, magic.magma_tempest, 
-        magic.wild_magic, magic.deep_impact,
-        magic.tsunami, magic.omnipower_igneous, magic.combust]
-    """
-         
+        magic.wild_magic, magic.tsunami, magic.deep_impact,
+         magic.combust]
+    magic.omnipower_igneous
+          
           const.tuska, ] """
     
     
-    optimizer = Optimizer()
+    """optimizer = Optimizer()
     with cProfile.Profile() as pr:
-        bestBar = optimizer.findTopAOE(bar, pool,5) #get top n bars
+        bestBar = optimizer.findTopAOE(bar, pool,10) #get top n bars
 
     optimizer.printBestBarInfo(bar, bestBar)
 
