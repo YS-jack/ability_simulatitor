@@ -1,0 +1,10 @@
+[Greater Chain, Magma Tempest, Dragon Breath, Sonic Wave, Sunshine, ]	expected primary dps =1495, secondary dps =1176
+[Greater Chain, Dragon Breath, Magma Tempest, Sonic Wave, Sunshine, ]	expected primary dps =1440, secondary dps =1164
+[Magma Tempest, Sunshine, Greater Chain, Dragon Breath, Sonic Wave, ]	expected primary dps =1485, secondary dps =1160
+[Sunshine, Greater Chain, Magma Tempest, Dragon Breath, Sonic Wave, ]	expected primary dps =1442, secondary dps =1144
+[Dragon Breath, Magma Tempest, Greater Chain, Sonic Wave, Sunshine, ]	expected primary dps =1495, secondary dps =1137
+[Greater Chain, Dragon Breath, Magma Tempest, Sunshine, Sonic Wave, ]	expected primary dps =1436, secondary dps =1126
+[Dragon Breath, Greater Chain, Magma Tempest, Sonic Wave, Sunshine, ]	expected primary dps =1446, secondary dps =1124
+[Sunshine, Greater Chain, Dragon Breath, Magma Tempest, Sonic Wave, ]	expected primary dps =1407, secondary dps =1120
+[Dragon Breath, Greater Chain, Magma Tempest, Sunshine, Sonic Wave, ]	expected primary dps =1454, secondary dps =1120
+[Magma Tempest, Sunshine, Dragon Breath, Greater Chain, Sonic Wave, ]	expected primary dps =1491, secondary dps =1116

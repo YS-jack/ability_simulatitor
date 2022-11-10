@@ -1,0 +1,10 @@
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Dragon Breath, Tsunami, Wild Magic, Omnipower, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Dragon Breath, Tsunami, Omnipower, Wild Magic, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Dragon Breath, Omnipower, Tsunami, Wild Magic, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Tsunami, Dragon Breath, Wild Magic, Omnipower, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Tsunami, Dragon Breath, Omnipower, Wild Magic, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Tsunami, Wild Magic, Dragon Breath, Omnipower, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Tsunami, Wild Magic, Omnipower, Dragon Breath, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Tsunami, Omnipower, Dragon Breath, Wild Magic, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Tsunami, Omnipower, Wild Magic, Dragon Breath, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
+[Corruption Blast, Greater Chain, Sunshine, Magma Tempest, Omnipower, Dragon Breath, Tsunami, Wild Magic, Sonic Wave, Combust, ]	expected primary dps =2542, secondary dps =1732
